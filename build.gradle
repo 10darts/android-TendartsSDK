@@ -1,0 +1,117 @@
+apply plugin: 'com.android.library'
+//apply plugin: 'android-library'
+/*
+configurations {
+    sdkTestingDebug
+    sdkTestingRelease
+    sdkProductionDebug
+    sdkProductionRelease
+}
+*/
+
+ext {
+    PUBLISH_GROUP_ID = 'com.darts'
+    PUBLISH_ARTIFACT_ID = 'darts'
+    PUBLISH_VERSION = '1.07'
+
+
+    bintrayRepo = '10-darts'
+    bintrayName = '10_darts_android_sdk'
+
+    publishedGroupId = PUBLISH_GROUP_ID
+    libraryName = '10DartsSDK'//'10_darts_android_sdk'
+    artifact = PUBLISH_ARTIFACT_ID
+
+    libraryDescription = '10 Darts Android SDK'
+
+    siteUrl = 'https://10darts.com/'
+    gitUrl = 'https://github.com/onpublico/android-sdk'
+
+    libraryVersion = PUBLISH_VERSION
+
+    developerId = '10Darts'
+    developerName = 'Jorge Arimany'
+    developerEmail = 'jorge@onpublico.com'
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://github.com/onpublico/android-sdk/blob/master/license.txt'
+    allLicenses = ["MIT"]
+}
+
+android {
+    compileSdkVersion 24//21
+    buildToolsVersion "25.0.1"
+
+    defaultConfig {
+        minSdkVersion 19
+        //targetSdkVersion 25
+        targetSdkVersion 23
+        versionCode 1
+        versionName PUBLISH_VERSION
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'library.pro' //'proguard-rules.pro'
+        }
+    }
+
+    publishNonDefault true
+    productFlavors {
+        sdkTesting {
+
+            //signingConfig signingConfigs.production
+        }
+        sdkProduction {
+
+            //signingConfig signingConfigs.production
+        }
+    }
+    packagingOptions {
+        pickFirst 'META-INF/*'
+    }
+
+
+
+   useLibrary 'org.apache.http.legacy'
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    //compile 'com.android.support:appcompat-v7:25.1.1'
+    //compile 'com.android.support:appcompat-v7:23.0.3'
+
+
+    //compile 'com.android.support:appcompat-v7:25.0.1'--------
+
+    compile ('com.google.android.gms:play-services-gcm:9.8.0'){ transitive = true }
+    compile 'com.google.android.gms:play-services-location:9.8.0'
+    //compile 'com.squareup.picasso:picasso:2.5.2'
+
+    testCompile 'junit:junit:4.12'
+    //compile group: 'org.apache.httpcomponents' , name: 'httpclient-android' , version: '4.3.5.1'
+    //compile group: 'org.apache.httpcomponents' , name: 'httpmime' , version: '4.3.5'
+    compile 'org.apache.httpcomponents:httpclient-android:4.3.5'
+    compile 'org.apache.httpcomponents:httpmime:4.3.5'
+    //compile 'org.apache.httpcomponents:httpcore:4.3.2'
+
+
+
+    //exclude module:'Onpublico','common','glass','mobile','wear'
+
+    //compile project(path: ':general')
+}
+
+
+
+//apply from: 'release-android-library.gradle'
+
+//apply plugin: 'com.github.dcendents.android-maven'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
