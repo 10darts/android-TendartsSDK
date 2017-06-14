@@ -11,8 +11,11 @@ def licenseUrl = 'https://github.com/onpublico/android-sdk/blob/master/license.t
 def pomUrl = 'https://10darts.com/'
 def pomPackaging ='aar'
 def scmUrl = 'https://github.com/onpublico/android-sdk'
-def scmConnection ='scm:git:https://github.com/onpublico/android-sdk'
-def scmDevConn ='scm:git:https://github.com/onpublico/android-sdk'
+def scmConnection ='scm:git:https://github.com/10darts/android-sdk'
+def scmDevConn ='scm:git:https://github.com/10darts/android-sdk'
+def snapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+def releaseUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+
 
 def localReleaseDest = "${buildDir}/release/${version}"
 
@@ -33,13 +36,64 @@ task androidSourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
+
 uploadArchives {
     repositories.mavenDeployer {
         pom.groupId = groupId
         pom.artifactId = artifactId
         pom.version = version
+
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        // Add other pom properties here if you want (developer details / licenses)
+
+        repository(url: releaseUrl) { authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)  }
+
+        snapshotRepository(url: snapshotUrl) {
+            authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)
+        }
+
+        pom.project{
+            name groupId
+            packaging pomPackaging
+            description pomDescription
+            url pomUrl
+            licenses{
+                license{
+                    name licenseName
+                    url licenseUrl
+                    distribution 'repo'
+                }
+
+            }
+            developers{
+                developer{
+                    id '10Darts'
+                    name 'Jorge Arimany'
+                }
+            }
+            scm {
+                url scmUrl
+                connection scmConnection
+                developerConnection scmDevConn
+            }
+
+        }
+    }
+
+    repositories.mavenDeployer {
+        pom.groupId = groupId
+        pom.artifactId = artifactId
+        pom.version = version
+
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
         // Add other pom properties here if you want (developer details / licenses)
         repository(url: "file://${localReleaseDest}")
+
+        //repository(url: releaseUrl) { authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)  }
+
+        snapshotRepository(url: snapshotUrl) {
+            authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)
+        }
 
         pom.project{
             name groupId
@@ -70,6 +124,8 @@ uploadArchives {
     }
 }
 
+
+
 task zipRelease(type: Zip) {
     from localReleaseDest
     destinationDir buildDir
@@ -85,7 +141,6 @@ task generateRelease {
 
 
 
-
 signing {
 
 
@@ -93,8 +148,12 @@ signing {
     sign configurations.archives
 }
 
+
+
+
 generateRelease.dependsOn(uploadArchives)
 generateRelease.dependsOn(zipRelease)
+
 
 
 artifacts {
@@ -103,3 +162,4 @@ artifacts {
 }
 
 //run ../gradlew clean build generateRelese
+//uploadArchives

@@ -10,13 +10,13 @@ configurations {
 */
 
 ext {
-    PUBLISH_GROUP_ID = 'com.darts'
-    PUBLISH_ARTIFACT_ID = 'darts'
-    PUBLISH_VERSION = '1.07'
+    PUBLISH_GROUP_ID = 'com.10darts'
+    PUBLISH_ARTIFACT_ID = 'sdk'
+    PUBLISH_VERSION = '1.10'
 
 
-    bintrayRepo = '10-darts'
-    bintrayName = '10_darts_android_sdk'
+    bintrayRepo = '10darts'
+    bintrayName = 'sdk'
 
     publishedGroupId = PUBLISH_GROUP_ID
     libraryName = '10DartsSDK'//'10_darts_android_sdk'
@@ -56,19 +56,39 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'library.pro' //'proguard-rules.pro'
+            android.libraryVariants.all
+                    {
+                        variant -> variant.outputs.each
+                                {
+                                    output ->
+                                        def outputFile = output.outputFile;
+                                        if( !outputFile.name.contains("esting")
+                                                && outputFile.name.endsWith(".aar")
+                                                &&!outputFile.name.contains("ebug"))
+                                        {
+                                            output.outputFile = new File(outputFile.parent, "sdk.aar")
+                                        }
+
+
+                        }
+                    }
         }
     }
 
-    publishNonDefault true
+    publishNonDefault false
     productFlavors {
         sdkTesting {
 
             //signingConfig signingConfigs.production
         }
-        sdkProduction {
+        sdk {
 
             //signingConfig signingConfigs.production
         }
+    }
+
+    android {
+        defaultPublishConfig "sdkRelease"
     }
     packagingOptions {
         pickFirst 'META-INF/*'
@@ -110,8 +130,12 @@ dependencies {
 
 
 
-//apply from: 'release-android-library.gradle'
+apply from: 'release-android-library.gradle'
 
 //apply plugin: 'com.github.dcendents.android-maven'
-apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+
+//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+
+
+// gradlew bintrayUpload
