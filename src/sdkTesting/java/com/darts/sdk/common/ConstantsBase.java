@@ -1,7 +1,7 @@
 /**
  * Created by jorgearimany on 27/5/15.
  */
-package com.darts.sdk.common;
+package com.tendarts.sdk.common;
 
 
 

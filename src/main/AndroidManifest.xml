@@ -1,4 +1,4 @@
-<manifest package="com.darts.sdk"
+<manifest package="com.tendarts.sdk"
 
 		  xmlns:android="http://schemas.android.com/apk/res/android"
 >
@@ -26,7 +26,7 @@
 
 
 		<receiver
-			android:name="com.darts.sdk.gcm.DartsReceiver"
+			android:name="com.tendarts.sdk.gcm.DartsReceiver"
 		>
 			<intent-filter>
 				<action android:name="com.darts.sdk.CLEAR_PUSHES"/>
@@ -52,7 +52,7 @@
 
 
 		<service
-			android:name="com.darts.sdk.gcm.GCMListenerService"
+			android:name="com.tendarts.sdk.gcm.GCMListenerService"
 			android:exported="false">
 			<intent-filter>
 				<action android:name="com.google.android.c2dm.intent.RECEIVE"/>
@@ -60,7 +60,7 @@
 		</service>
 
 		<service
-			android:name="com.darts.sdk.gcm.GCMInstanceIdListener"
+			android:name="com.tendarts.sdk.gcm.GCMInstanceIdListener"
 			android:exported="false">
 			<intent-filter>
 				<action android:name="com.google.android.gms.iid.InstanceID"/>
@@ -68,7 +68,7 @@
 		</service>
 
 		<service
-			android:name="com.darts.sdk.gcm.GCMRegistrationIntentService"
+			android:name="com.tendarts.sdk.gcm.GCMRegistrationIntentService"
 			android:exported="false">
 		</service>
 

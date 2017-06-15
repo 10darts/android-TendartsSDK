@@ -161,4 +161,4 @@ artifacts {
     archives androidJavadocsJar
 }
 
-//run ../gradlew clean build generateRelese
+//run ../gradlew clean build generateRelease
