@@ -1151,8 +1151,12 @@ public class TendartsSDK
 	}
 
 
-
-
+	/**
+	 * Links current device with your own user identifier
+	 * @param observer
+	 * @param context
+	 * @param userIdentifier
+	 */
 	public static void linkDeviceWithUserIdentifier( final IResponseObserver observer,
 													 final Context context,
 													 String userIdentifier)

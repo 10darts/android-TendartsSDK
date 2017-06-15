@@ -252,7 +252,7 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		{
 			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
 			Bundle bundle = ai.metaData;
-			String id = bundle.getString("darts_accessToken");
+			String id = bundle.getString("sdk_accessToken");
 			if( id != null)
 			{
 				String token = Configuration.instance(context).getAccessToken();
@@ -264,6 +264,10 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			else
 			{
 				id = Configuration.instance(context).getAccessToken();
+			}
+			if( id == null || id.length() < 3)
+			{
+				Log.w(TAG, "Please add  tendarts_sdk_access_token:\"YOUR ACCESS TOKEN\" in manifestPlaceholders");
 			}
 			return id;
 		} catch (Exception e)

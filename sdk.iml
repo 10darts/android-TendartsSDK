@@ -135,7 +135,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/reports" />
       <excludeFolder url="file://$MODULE_DIR$/build/test-results" />
       <excludeFolder url="file://$MODULE_DIR$/build/tmp" />
-      <excludeFolder url="jar://$MODULE_DIR$/build/release-1.16.zip!/" />
+      <excludeFolder url="jar://$MODULE_DIR$/build/release-1.17.zip!/" />
     </content>
     <orderEntry type="jdk" jdkName="Android API 24 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

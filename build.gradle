@@ -12,7 +12,7 @@ configurations {
 ext {
     PUBLISH_GROUP_ID = 'com.10darts'
     PUBLISH_ARTIFACT_ID = 'sdk'
-    PUBLISH_VERSION = '1.17'
+    PUBLISH_VERSION = '1.18'
 
 
     bintrayRepo = '10darts'
