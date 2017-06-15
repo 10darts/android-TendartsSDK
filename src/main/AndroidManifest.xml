@@ -14,9 +14,10 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.VIBRATE" />
 
+	<!--
 	<permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
 	<uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
-
+-->
 
 	<application android:allowBackup="true"
 				 android:label="@string/app_name"
@@ -35,7 +36,7 @@
 		</receiver>
 
 
-		<receiver
+	<!--	<receiver
 			android:name="com.google.android.gms.gcm.GcmReceiver"
 			android:exported="true"
 			android:permission="com.google.android.c2dm.permission.SEND" >
@@ -46,7 +47,9 @@
 			</intent-filter>
 
 
-		</receiver>
+		</receiver>-->
+
+
 
 		<service
 			android:name="com.darts.sdk.gcm.GCMListenerService"
@@ -68,6 +71,21 @@
 			android:name="com.darts.sdk.gcm.GCMRegistrationIntentService"
 			android:exported="false">
 		</service>
+
+
+		<!--
+		<meta-data
+			android:name="sdk_accessToken"
+			android:value="str:${tendarts_sdk_access_token}"/>
+
+		<meta-data
+			android:name="sdk_clientClass"
+			android:value="str:${tendarts_sdk_client_class}"/>
+
+		<meta-data
+			android:name="str:${gcm_defaultSenderId}"
+			android:value="760485215389\0"
+		/>-->
 
 	</application>
 

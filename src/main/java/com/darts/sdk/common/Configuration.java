@@ -144,13 +144,13 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		{
 			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(packageName, PackageManager.GET_META_DATA);
 			Bundle bundle = ai.metaData;
-			String id = bundle.getString("darts_GcmSenderId");
-			Log.d(TAG, "darts_GcmSenderId from "+ai+": "+id);
+			String id = bundle.getString("gcm_defaultSenderId");
+			Log.d(TAG, "gcm_defaultSenderId from "+ai+": "+id);
 			Util.printExtras(TAG,bundle);
 			return id;
 		} catch (Exception e)
 		{
-			Log.e(TAG, "Please add <meta-data android:name=\"darts_GcmSenderId\" android:value=\"R.string.gcm_defaultSenderId\"/> in your Application section of your AndroidManifest.xml file.");
+			Log.e(TAG, "Please add  gcm_sender_id in manifestPlaceholders"+ e);
 		}
 		return null;
 	}
@@ -167,10 +167,10 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 
 			String id = "";
 
-			Object o = bundle.get("darts_GcmSenderId");
+			Object o = bundle.get("gcm_defaultSenderId");
 			if( o == null)
 			{
-				Log.e(TAG, "Please add <meta-data android:name=\"darts_GcmSenderId\" android:value=\"R.string.gcm_defaultSenderId\"/> in your Application section of your AndroidManifest.xml file.");
+				Log.e(TAG, "Please add  gcm_sender_id in manifestPlaceholders");
 				return null;
 			}
 
@@ -189,7 +189,7 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			return id;
 		} catch (Exception e)
 		{
-			Log.e(TAG, "Please add <meta-data android:name=\"darts_GcmSenderId\" android:value=\"R.string.gcm_defaultSenderId\"/> in your Application section of your AndroidManifest.xml file.");
+			Log.e(TAG, "Please add  gcm_sender_id in manifestPlaceholders");
 		}
 		return null;
 	}
@@ -207,11 +207,11 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			return getClientClassName(context);
 		}
 		Bundle bundle = info.metaData;
-		String id = bundle.getString("darts_clientClass");
+		String id = bundle.getString("sdk_clientClass");
 		if( id == null)
 		{
-			Log.e("SDK:Config", "Please add <meta-data android:name=\"darts_clientClass\" android:value=\"com.yourcompany.YourClientClass\"/> in your Application section of your AndroidManifest.xml file.");
-			Log.d(TAG, "not found darts_clientClass in :"+info.packageName);
+			Log.e("SDK:Config", "Please add  tendarts_sdk_client_class:\"com.yourcompany.YourClientClass\" in manifestPlaceholders");
+			Log.d(TAG, "not found sdk_clientClass in :"+info.packageName);
 			Util.printExtras(TAG, bundle);
 		}
 		return id;
@@ -220,13 +220,14 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 	{
 		try
 		{
-			//todo fix, may be on application creation??
+
+
 			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
 			Bundle bundle = ai.metaData;
-			String id = bundle.getString("darts_clientClass");
+			String id = bundle.getString("sdk_clientClass");
 			if( id == null)
 			{
-				Log.e("SDK:Config", "Please add <meta-data android:name=\"darts_clientClass\" android:value=\"com.yourcompany.YourClientClas\"/> in your Application section of your AndroidManifest.xml file.");
+				Log.e("SDK:Config", "Please add  tendarts_sdk_client_class:\"com.yourcompany.YourClientClass\" in manifestPlaceholders");
 
 				Log.d(TAG, "getClientClassName: getClientClass not found for sdk_clientClass in :");
 				Util.printExtras(TAG, bundle);
@@ -234,7 +235,7 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			return id;
 		} catch (Exception e)
 		{
-			Log.w(TAG, "Please add <meta-data android:name=\"darts_clientClass\" android:value=\"com.mycompany.myapp.mysdkClient\"/> in your Application section of your AndroidManifest.xml file.");
+			Log.w(TAG, "Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders");
 			return null;
 
 		}
@@ -262,7 +263,7 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			return id;
 		} catch (Exception e)
 		{
-			Log.w(TAG, "Please add <meta-data android:name=\"darts_accessToken\" android:value=\"providedAccessToken\"/> in your Application section of your AndroidManifest.xml file.");
+			Log.w(TAG, "Please add  tendarts_sdk_access_token:\"YOUR ACCESS TOKEN\" in manifestPlaceholders");
 			return null;
 
 		}

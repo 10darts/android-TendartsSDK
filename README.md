@@ -1,5 +1,8 @@
 # AndroidSDK
 
+obsolete, please refer to doc.10darts.com
+
+
 # QuickStart
 
 The following instructions will guide you through the process of implementing 10 Darts SDK in your application, the instructions are based on _Android Studio._

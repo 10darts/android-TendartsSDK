@@ -162,4 +162,3 @@ artifacts {
 }
 
 //run ../gradlew clean build generateRelese
-//uploadArchives

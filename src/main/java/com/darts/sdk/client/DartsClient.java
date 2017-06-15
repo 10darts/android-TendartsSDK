@@ -16,8 +16,7 @@ import java.security.InvalidParameterException;
 
 /**
  *  You should subclass SDKClient and implement the interfaces (mysdkClient)
- *  add to the manifest:
- *  {@code <meta-data android:name="darts_clientClass" android:value="com.mycompany.myapp.mysdkClient"/>}
+ *  Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders
 *
  */
 public abstract   class DartsClient extends BroadcastReceiver implements INotifications, ISDKCore, IUIStrings, IGeolocation
@@ -79,18 +78,18 @@ public abstract   class DartsClient extends BroadcastReceiver implements INotifi
 				} catch (InstantiationException e)
 				{
 					e.printStackTrace();
-					Log.e("DartsSDK:Config", "Please check <meta-data android:name=\"darts_clientClass\" android:value=\"com.yourcompany.YourClientClass\"/> in your Application section of your AndroidManifest.xml file.");
+					Log.e("DartsSDK:Config", "Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders");
 
 					throw new InvalidParameterException("Error instantiating "+name);
 				} catch (IllegalAccessException e)
 				{
 					e.printStackTrace();
-					Log.e("DartsSDK:Config", "Please check <meta-data android:name=\"darts_clientClass\" android:value=\"com.yourcompany.YourClientClass\"/> in your Application section of your AndroidManifest.xml file.");
+					Log.e("DartsSDK:Config", "Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders");
 					throw  new InvalidParameterException("Illegal Access instantiating "+name);
 				} catch (ClassNotFoundException e)
 				{
 					e.printStackTrace();
-					Log.e("DartsSDK:Config", "Please check <meta-data android:name=\"darts_clientClass\" android:value=\"com.yourcompany.YourClientClass\"/> in your Application section of your AndroidManifest.xml file.");
+					Log.e("DartsSDK:Config", "Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders");
 					throw new InvalidParameterException("could not find "+name);
 				}
 				catch (Exception e)

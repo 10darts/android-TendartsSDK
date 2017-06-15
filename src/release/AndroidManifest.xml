@@ -1,0 +1,39 @@
+<manifest package="com.darts.sdk"
+
+		  xmlns:android="http://schemas.android.com/apk/res/android"
+>
+
+	<permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+	<uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
+
+	<application>
+		<receiver
+			android:name="com.google.android.gms.gcm.GcmReceiver"
+			android:exported="true"
+			android:permission="com.google.android.c2dm.permission.SEND" >
+			<intent-filter>
+				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
+				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+				<category android:name="${applicationId}" />
+			</intent-filter>
+
+
+		</receiver>
+
+
+		<meta-data
+			android:name="sdk_accessToken"
+			android:value="${tendarts_sdk_access_token}"/>
+
+		<meta-data
+			android:name="sdk_clientClass"
+			android:value="${tendarts_sdk_client_class}"/>
+
+		<meta-data
+			android:name="gcm_defaultSenderId"
+			android:value="${gcm_sender_id}\0"
+		/>
+
+	</application>
+
+</manifest>
