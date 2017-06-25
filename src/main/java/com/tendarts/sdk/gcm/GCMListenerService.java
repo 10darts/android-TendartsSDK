@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -425,11 +426,20 @@ public class GCMListenerService extends GcmListenerService
 						.setAutoCancel(true)
 						//.setCategory(Notification.CATEGORY_SOCIAL)
 						.setLargeIcon( TendartsSDK.instance().getLargeIcon(context))
-						.setVisibility(android.app.Notification.VISIBILITY_PUBLIC)
-						.setPriority(android.app.Notification.PRIORITY_HIGH)
+
 						.setStyle(new NotificationCompat.BigTextStyle().bigText(message))
 						.setExtras(extras);
 
+				//noinspection InlinedApi
+				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)//21
+				{
+					builder.setVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+				}
+				//noinspection InlinedApi
+				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)//16
+				{
+					builder.setPriority(android.app.Notification.PRIORITY_HIGH);
+				}
 
 				if( makeSound)
 				{
@@ -876,12 +886,24 @@ public class GCMListenerService extends GcmListenerService
 					//.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_push_2))
 
 					//.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
-					.setVisibility(android.app.Notification.VISIBILITY_PUBLIC)
-					.setPriority(android.app.Notification.PRIORITY_DEFAULT)
+
+
 					.setVibrate(new long[]{0l})//1000, 1000, 1000, 1000, 1000})
 					//.setDefaults(Notification.DEFAULT_SOUND)
 					.addAction(TendartsSDK.instance().getViewStackedIconResource(), TendartsSDK.instance().getViewStackedString(), pi)
 					.addAction(TendartsSDK.instance().getCancelStackedIconResource(), TendartsSDK.instance().getCancelStackedString(), pendingIntentCancel);
+
+			//noinspection InlinedApi
+			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)//21
+			{
+				builder.setVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+			}
+			//noinspection InlinedApi
+			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)//16
+			{
+				builder.setPriority(android.app.Notification.PRIORITY_DEFAULT);
+			}
+
 
 			NotificationCompat.InboxStyle inbox = new NotificationCompat.InboxStyle(builder);
 			int i = 0;

@@ -2,6 +2,7 @@ package com.tendarts.sdk.common;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +33,7 @@ public class Util
 	private static final String CHECK_OP_NO_THROW = "checkOpNoThrow";
 	private static final String OP_POST_NOTIFICATION = "OP_POST_NOTIFICATION";
 
+	@SuppressLint("NewApi")
 	public static int isNotificationEnabled( Context context)
 	{
 		try

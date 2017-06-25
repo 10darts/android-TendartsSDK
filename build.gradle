@@ -12,7 +12,7 @@ configurations {
 ext {
     PUBLISH_GROUP_ID = 'com.10darts'
     PUBLISH_ARTIFACT_ID = 'sdk'
-    PUBLISH_VERSION = '1.18'
+    PUBLISH_VERSION = '1.19'
 
 
     bintrayRepo = '10darts'
@@ -43,7 +43,7 @@ android {
     buildToolsVersion "25.0.1"
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 15
         //targetSdkVersion 25
         targetSdkVersion 23
         versionCode 1
