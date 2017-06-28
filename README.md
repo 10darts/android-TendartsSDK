@@ -1,5 +1,7 @@
 # AndroidSDK
 
+[![Join the chat at https://gitter.im/10darts/android-sdk](https://badges.gitter.im/10darts/android-sdk.svg)](https://gitter.im/10darts/android-sdk?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 obsolete, please refer to doc.10darts.com
 
 
