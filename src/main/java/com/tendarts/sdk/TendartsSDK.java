@@ -1176,6 +1176,18 @@ public class TendartsSDK
 				@Override
 				public void onSuccess(int operationId, JSONObject data)
 				{
+					if (data.has("persona") && !data.isNull("persona"))
+					{
+						try
+						{
+							String resourceUri = data.getString("persona");
+							Configuration.instance(context).setUserCode(resourceUri);
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+						}
+					}
 					if( observer != null)
 					{
 						observer.onOk();
