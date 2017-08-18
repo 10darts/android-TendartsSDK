@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.Model.Notification;
+import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
 import com.tendarts.sdk.common.Constants;
@@ -88,29 +89,7 @@ public class DartsReceiver extends BroadcastReceiver
 						{
 							Notification push  = new Notification(intent);
 
-							String json = Util.getDeviceJson(context);
-
-							String url = String.format(Constants.pushClicked, push.getCode());
-							Log.d("NET", "sending pchd: "+url+"\n"+json);
-							Communications.patchData(url,
-									Util.getProvider(), 0, new ICommunicationObserver()
-									{
-										@Override
-										public void onSuccess(int operationId, JSONObject data)
-										{
-											TendartsClient.instance(context).logEvent("Push","succesfully notified follow","");
-
-											Log.d("DARTS", "push read notified");
-										}
-
-										@Override
-										public void onFail(int operationId, String reason)
-										{
-											Util.checkUnauthorized(reason,context);
-											TendartsClient.instance(context).logEvent("App","can't notify follow",""+reason);
-											Log.d("DARTS", "push read failed: "+reason);
-										}
-									}, json,false);
+							TendartsSDK.notificationClicked(push.getCode(), context);
 
 							dismissNotificationIfNeeded(context,intent);
 							TendartsClient.instance(context).onNotificationClicked(push);
@@ -152,6 +131,8 @@ public class DartsReceiver extends BroadcastReceiver
 
 		}
 	}
+
+
 
 	private void dismissNotificationIfNeeded(Context context, Intent intent)
 	{

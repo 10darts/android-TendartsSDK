@@ -1151,6 +1151,35 @@ public class TendartsSDK
 	}
 
 
+
+
+	public static void notificationClicked(String notificationCode, final Context context)
+	{
+		String json = Util.getDeviceJson(context);
+
+		String url = String.format(Constants.pushClicked, notificationCode);
+		Log.d("NET", "sending pchd: "+url+"\n"+json);
+		Communications.patchData(url,
+				Util.getProvider(), 0, new ICommunicationObserver()
+				{
+					@Override
+					public void onSuccess(int operationId, JSONObject data)
+					{
+						TendartsClient.instance(context).logEvent("Push","succesfully notified follow","");
+
+						Log.d("DARTS", "push read notified");
+					}
+
+					@Override
+					public void onFail(int operationId, String reason)
+					{
+						Util.checkUnauthorized(reason,context);
+						TendartsClient.instance(context).logEvent("App","can't notify follow",""+reason);
+						Log.d("DARTS", "push read failed: "+reason);
+					}
+				}, json,false);
+	}
+
 	/**
 	 * Links current device with your own user identifier
 	 * @param observer
