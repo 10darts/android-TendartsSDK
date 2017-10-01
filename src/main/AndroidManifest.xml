@@ -72,6 +72,10 @@
 			android:exported="false">
 		</service>
 
+		<service
+			android:name="com.tendarts.sdk.monitoring.IntentMonitorService"
+			android:exported="false"/>
+
 
 		<!--
 		<meta-data

@@ -260,12 +260,14 @@ public class GCMListenerService extends GcmListenerService
 			{
 				Log.d(TAG, "postNotification: new badge");
 				count = Integer.parseInt(extras.getString("badge"));
+				Util.setBadgeCount(count, context);
 			}
 			else
 			{
+				//if no bdge in push do nothing
 				Log.d(TAG, "postNotification: no badge");
 			}
-			Util.setBadgeCount(count, context);
+
 		}
 		catch (Exception e)
 		{

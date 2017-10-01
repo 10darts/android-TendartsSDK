@@ -180,6 +180,12 @@ public class Util
 		}
 	}
 
+	public static String getFullDeviceUrl (Context context )
+	{
+		return String.format( Constants.device,Configuration.instance(context).getPushCode());
+
+	}
+
 	public static String getDeviceJson(Context context)
 	{
 		String deviceId = String.format( Constants.deviceReference,Configuration.instance(context).getPushCode());

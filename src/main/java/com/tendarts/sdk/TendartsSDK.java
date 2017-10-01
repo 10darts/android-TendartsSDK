@@ -185,10 +185,10 @@ public class TendartsSDK
 	 *
 	 * @return SDK instance so you can concatenate calls
 	 */
-	public TendartsSDK notificationColorResource(
-
-			int colorResource){_notificationColorResource = colorResource;
-	return  this;
+	public TendartsSDK notificationColorResource(int colorResource)
+	{
+		_notificationColorResource = colorResource;
+		return  this;
 	}
 
 
@@ -203,6 +203,7 @@ public class TendartsSDK
 
 	/**
 	 * Set the small icon resource
+	 * note: if not set, the small icon defaults to android's ic_popup_reminder
 	 * @param smallIconResource small icon resource
 	 * @return SDK instance so you can concatenate calls
 	 */
@@ -221,7 +222,7 @@ public class TendartsSDK
 	//---------------------------------------
 
 	/**
-	 * Set the large icon resource
+	 * Set the large icon resource, if not set your app icon is used
 	 * @param largeIconResource large icon resource
 	 * @return SDK instance so you can concatenate calls
 	 */

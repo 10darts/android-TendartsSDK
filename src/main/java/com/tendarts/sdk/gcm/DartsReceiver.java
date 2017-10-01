@@ -18,6 +18,7 @@ import com.tendarts.sdk.common.Constants;
 import com.tendarts.sdk.common.Util;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
+import com.tendarts.sdk.monitoring.IntentMonitorService;
 
 
 import org.json.JSONObject;
@@ -104,6 +105,11 @@ public class DartsReceiver extends BroadcastReceiver
 										Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepUrl.trim()));
 										viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 										context.startActivity(viewIntent);
+
+										//start monitoring service
+										Intent service  = new Intent(context, IntentMonitorService.class);
+										service.setData(Uri.parse(push.getCode()));
+										context.startService(service);
 									}
 									catch (Exception e)
 									{

@@ -12,9 +12,13 @@ public class Constants extends ConstantsBase
 	public static final String device =baseUrl+ "/api/v1/devices/%s/";
 	public static final String deviceReference = "/api/v1/devices/%s/";
 	public static final String deviceAccess = baseUrl+"/api/v1/devices/%s/access/";
+	public static final String push = baseUrl+"/api/v1/pushes/%s/";
+	public static final String sessionEvent = "/api/v1/event_kinds/session/";
+	public static final String events = baseUrl+ "/api/v1/events/";
 	public static final String disablePush= baseUrl+"/api/v2/devices/disable/";
 
 	public static final String pushReceived = baseUrl +"/api/v1/pushes/%s/received/";
+	public static final String pushAppTime = baseUrl +"/api/v1/pushes/%s/received/";
 	public static final String pushRead = baseUrl+"/api/v1/pushes/%s/read/";
 	public static final String pushAllRead = baseUrl +"/api/v1/pushes/all_read/";
 	public static final String pushClicked = baseUrl +"/api/v1/pushes/%s/follow/";
