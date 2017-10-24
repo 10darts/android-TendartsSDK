@@ -16,6 +16,7 @@ import android.text.style.StyleSpan;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.tendarts.sdk.common.PendingCommunicationController;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
 import com.tendarts.sdk.communications.IImageDownloadObserver;
@@ -202,7 +203,8 @@ public class GCMListenerService extends GcmListenerService
 									}
 
 									@Override
-									public void onFail(int operationId, String reason)
+									public void onFail(int operationId, String reason,
+													   Communications.PendingCommunication pending)
 									{
 										Util.checkUnauthorized(reason,getApplicationContext());
 										TendartsClient.instance(finalContext).
@@ -216,8 +218,10 @@ public class GCMListenerService extends GcmListenerService
 											reason + " duplicate: sent id:" + id + " stored id's:"
 															+ PersistentPush.getAllIds(finalContext));
 										}
-
-
+										else
+										{
+											PendingCommunicationController.addPending(pending, getApplicationContext());
+										}
 										Log.w(TAG, "push rcv failed: " + reason);
 									}
 								}, json, false);

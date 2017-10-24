@@ -9,5 +9,5 @@ import org.json.JSONObject;
 public interface ICommunicationObserver
 {
 	public void onSuccess( int operationId, JSONObject data);
-	public void onFail(int operationId, String reason);
+	public void onFail(int operationId, String reason, Communications.PendingCommunication pending);
 }

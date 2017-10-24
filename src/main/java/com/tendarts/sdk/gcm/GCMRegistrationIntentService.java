@@ -99,7 +99,8 @@ public class GCMRegistrationIntentService extends IntentService
 			//handle new registration id:
 
 			String saved_id = Configuration.instance(getApplicationContext()).getPush();
-			if( !reg_id.equalsIgnoreCase(saved_id) || Configuration.instance(context).getPushSentToken() == null)
+			if( !reg_id.equalsIgnoreCase(saved_id) || Configuration.instance(context).getPushSentToken() == null
+					|| Configuration.instance(context).getPushCode() == null)
 			{
 				PushController.sendRegistrationToken(reg_id, getApplicationContext());
 				Log.i(TAG, "new reg id");

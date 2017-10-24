@@ -381,6 +381,17 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 		return null;
 	}
 
+
+	/**
+	 * If linkDeviceWithUserIdentifier has failed, an automatic retry is started, so when finally
+	 * the user is linked this method will be called
+	 */
+
+	public  void onUserLinkedToDevice()
+	{
+
+	}
+
 	//throw new UnsupportedOperationException("Not yet implemented: derive from SDKClient and override getGCMDefaultSenderId");
 
 }

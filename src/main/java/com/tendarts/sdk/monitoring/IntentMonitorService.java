@@ -129,7 +129,7 @@ public class IntentMonitorService extends IntentService
 				}
 
 				@Override
-				public void onFail(int operationId, String reason)
+				public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 				{
 					Util.checkUnauthorized(reason,getApplicationContext());
 					TendartsClient.instance(getApplicationContext()).logEvent("SDK",

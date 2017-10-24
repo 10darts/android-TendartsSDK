@@ -13,8 +13,10 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.apache.http.Header;
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
@@ -34,6 +36,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.util.EntityUtilsHC4;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -102,7 +105,7 @@ public class Communications
 	//          CONSTANTS
 	//----------------------------------------------------------------------------------------------
 
-	private static final int CONNECTION_TIMEOUT = 10000;
+	public static final int CONNECTION_TIMEOUT = 10000;
 	private static final String TAG = "OP:Communications:";
 	public static final int MIN_ACCURACY = 1500;
 
@@ -345,7 +348,7 @@ public class Communications
 					}
 
 					@Override
-					public void onFail(int operationId, String reason)
+					public void onFail(int operationId, String reason, PendingCommunication pending)
 					{
 						provider.onGeostatSent(false, reason);
 						Log.e(TAG, "sendGeoStats error:" + reason);
@@ -658,6 +661,7 @@ public class Communications
 		HttpClient client = new DefaultHttpClient();
 		HttpConnectionParams.setConnectionTimeout(client.getParams(), CONNECTION_TIMEOUT);
 		HttpResponse response;
+		PendingCommunication pending = null;
 		try
 		{
 
@@ -671,13 +675,15 @@ public class Communications
 			{
 				setHeaders(post, provider);
 			}
+			pending = new PendingCommunication(PendingCommunication.Method.POST,
+					payload,post.getAllHeaders(),url);
 			if (payload != null)
 			{
 				String body = payload;
 				StringEntity se = new StringEntity(body, "UTF-8");
 				post.setEntity(se);
 			}
-			CommunicationsThread thread = new CommunicationsThread(observer, id, client, post, plain);
+			CommunicationsThread thread = new CommunicationsThread(observer, id, client, post, plain, pending);
 			if (!synchronous)
 			{
 				thread.start();
@@ -692,7 +698,7 @@ public class Communications
 
 			if (observer != null)
 			{
-				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause());
+				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause(),pending);
 			}
 			Log.e(TAG, "Error getting data:" + ex.getMessage());
 		}
@@ -711,8 +717,10 @@ public class Communications
 		HttpClient client = new DefaultHttpClient();
 		HttpConnectionParams.setConnectionTimeout(client.getParams(), CONNECTION_TIMEOUT);
 		HttpResponse response;
+		PendingCommunication pending= null;
 		try
 		{
+
 
 
 			HttpPatch post = new HttpPatch(url);
@@ -724,13 +732,16 @@ public class Communications
 			{
 				setHeaders(post, provider);
 			}
+			pending = new PendingCommunication(PendingCommunication.Method.PATCH,
+				payload,post.getAllHeaders(),url);
+
 			if (payload != null)
 			{
 				String body = payload;
 				StringEntity se = new StringEntity(body, "UTF-8");
 				post.setEntity(se);
 			}
-			CommunicationsThread thread = new CommunicationsThread(observer, id, client, post, plain);
+			CommunicationsThread thread = new CommunicationsThread(observer, id, client, post, plain, pending);
 			if (!synchronous)
 			{
 				thread.start();
@@ -744,7 +755,7 @@ public class Communications
 
 			if (observer != null)
 			{
-				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause());
+				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause(),pending);
 			}
 			Log.e(TAG, "Error getting data:" + ex.getMessage());
 		}
@@ -770,6 +781,7 @@ public class Communications
 		HttpClient client = new DefaultHttpClient();
 		HttpConnectionParams.setConnectionTimeout(client.getParams(), CONNECTION_TIMEOUT);
 		HttpResponse response;
+		PendingCommunication pending = null;
 		try
 		{
 
@@ -783,13 +795,16 @@ public class Communications
 			{
 				setHeaders(post, provider);
 			}
+			pending = new PendingCommunication(PendingCommunication.Method.POST,
+					payload,post.getAllHeaders(),url);
 			if (payload != null)
 			{
 				String body = payload;
 				StringEntity se = new StringEntity(body, "UTF-8");
 				post.setEntity(se);
 			}
-			CommunicationsThread thread = new CommunicationsThread(observer, id, client, post, plain);
+
+			CommunicationsThread thread = new CommunicationsThread(observer, id, client, post, plain, pending);
 			if (!synchronous)
 			{
 				thread.start();
@@ -803,7 +818,7 @@ public class Communications
 
 			if (observer != null)
 			{
-				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause());
+				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause(),pending);
 			}
 			Log.e(TAG, "Error getting data:" + ex.getMessage());
 		}
@@ -826,7 +841,7 @@ public class Communications
 			setHeaders(delete, provider);
 
 
-			CommunicationsThread thread = new CommunicationsThread(observer, id, client, delete, false);
+			CommunicationsThread thread = new CommunicationsThread(observer, id, client, delete, false, null);
 			thread.start();
 
 		} catch (Exception ex)
@@ -834,7 +849,7 @@ public class Communications
 
 			if (observer != null)
 			{
-				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause());
+				observer.onFail(id, "" + ex.getMessage() + ":" + ex.getCause(),null);
 			}
 			Log.e(TAG, "Error getting data:" + ex.getMessage());
 		}
@@ -1627,7 +1642,7 @@ public class Communications
 				if (_observer != null)
 				{
 
-					_observer.onFail(_id, "" + _ex.getMessage() + ":" + _ex.getCause());
+					_observer.onFail(_id, "" + _ex.getMessage() + ":" + _ex.getCause(),null);
 				}
 			} catch (Exception e)
 			{
@@ -1648,7 +1663,7 @@ public class Communications
 			HttpGet get = new HttpGet(url);
 			setHeaders(get, provider);
 
-			CommunicationsThread thread = new CommunicationsThread(observer, id, client, get, plain);
+			CommunicationsThread thread = new CommunicationsThread(observer, id, client, get, plain, null);
 			thread.start();
 
 		} catch (Exception ex)
@@ -1823,19 +1838,20 @@ String pass = userDetails.getString("password", "");
 		private boolean _plain = false;
 
 
+		private  PendingCommunication _pending = null;
 		//TODO: usar volley!!!!!
 
 		/**
 		 * Constructor
-		 *
-		 * @param observer Observer to be notified when operations ends. could be null
+		 *  @param observer Observer to be notified when operations ends. could be null
 		 * @param id       Operation id, passed to observer.
 		 * @param client   Client to perform operation, should not be null
 		 * @param request  Request to be performed, should not be null
+		 * @param pending
 		 */
 		public CommunicationsThread(ICommunicationObserver observer, int id,
 									HttpClient client,
-									HttpUriRequest request, boolean plain)
+									HttpUriRequest request, boolean plain, PendingCommunication pending)
 		{
 			assert (request != null);
 			assert (client != null);
@@ -1844,7 +1860,7 @@ String pass = userDetails.getString("password", "");
 			_client = client;
 			_request = request;
 			_plain = plain;
-
+			_pending = pending;
 		}
 
 
@@ -1916,12 +1932,25 @@ String pass = userDetails.getString("password", "");
 							} else
 							{
 
+
 								if (result != null && result.length() > 3)
 								{
-									d = new Date();
-									resultObject = new JSONObject(result);
-									now = new Date();
-									Log.i(TAG, "T:" + (now.getTime() - d.getTime()) + " for json parsing");
+									try
+									{
+										d = new Date();
+										resultObject = new JSONObject(result);
+										now = new Date();
+										Log.i(TAG, "T:" + (now.getTime() - d.getTime()) + " for json parsing");
+									}
+									catch (Exception e)
+									{
+										if(_observer != null)
+										{
+											_observer.onFail(_id,"BAD JSON RESPONSE:("+result+")"+e.getMessage(),_pending);
+										}
+										e.printStackTrace();
+										resultObject = new JSONObject();
+									}
 								} else
 								{
 									resultObject = new JSONObject();
@@ -1956,7 +1985,7 @@ String pass = userDetails.getString("password", "");
 								e.printStackTrace();
 							}
 
-							_observer.onFail(_id, "" + code + ":" + result);
+							_observer.onFail(_id, "" + code + ":" + result,_pending);
 
 							printHeaders(_request.getAllHeaders());
 						}
@@ -1965,14 +1994,14 @@ String pass = userDetails.getString("password", "");
 				{
 					if (_observer != null)
 					{
-						_observer.onFail(_id, "No response");
+						_observer.onFail(_id, "No response",_pending);
 					}
 				}
 			} catch (Exception ex)
 			{
 				if (_observer != null)
 				{
-					_observer.onFail(_id, "" + ex.getMessage() + ":" + ex.getCause());
+					_observer.onFail(_id, "" + ex.getMessage() + ":" + ex.getCause(),_pending);
 				}
 				Log.e(TAG, "Error running thread:" + ex.getMessage());
 				ex.printStackTrace();
@@ -2543,5 +2572,138 @@ String pass = userDetails.getString("password", "");
 			e.printStackTrace();
 		}
 		Log.d("GEO:", "addGeoData: " + object);
+	}
+
+	public static class PendingCommunication
+	{
+
+		public static final String RETRIES = "retries";
+		public static final String ERROR = "error";
+		public static final String BODY = "body";
+		public static final String METHOD = "method";
+		public static final String NAME = "name";
+		public static final String VALUE = "value";
+		public static final String HEADERS = "headers";
+		public static final String URL ="url";
+		public static final String TIMESTAMP = "timestamp";
+
+		public enum Method
+		{
+			NONE,
+			PUT,
+			POST,
+			GET,
+			PATCH
+		}
+		public class JsonHeader implements Header
+		{
+
+			private String name;
+			private String value;
+			public JsonHeader( JSONObject object)
+			{
+				try
+				{
+					name = object.getString(NAME);
+					value = object.getString(VALUE);
+				} catch (JSONException e)
+				{
+					e.printStackTrace();
+				}
+			}
+			@Override
+			public String getName()
+			{
+				return name;
+			}
+
+			@Override
+			public String getValue()
+			{
+				return value;
+			}
+
+			@Override
+			public HeaderElement[] getElements() throws ParseException
+			{
+				return new HeaderElement[0];
+			}
+		}
+		public String url;
+		public int nRetries;
+		public String errorStack;
+		public Header[] headers;
+		public String body;
+		public Method method;
+		public long timestamp;
+
+
+
+		public PendingCommunication(Method method,String body, Header[] headers, String url )
+		{
+			nRetries =0;
+			errorStack = "";
+			this.method = method;
+			this.body = body;
+			this.headers = headers;
+			this.url = url;
+			this.timestamp = new Date().getTime();
+		}
+
+		public PendingCommunication(JSONObject object)
+		{
+			try
+			{
+
+				url = object.getString(URL);
+				nRetries = object.getInt(RETRIES);
+				errorStack = object.getString(ERROR);
+				body = object.getString(BODY);
+				method = Method.valueOf(object.getString(METHOD));
+				timestamp = object.getLong(TIMESTAMP);
+				JSONArray array = object.getJSONArray(HEADERS);
+				if( array != null && array.length() > 0)
+				{
+
+					headers = new Header[array.length()];
+
+					for( int i =0; i < array.length(); i++)
+					{
+
+						headers[i]= new JsonHeader(array.getJSONObject(i));
+					}
+				}
+			} catch (JSONException e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		public JSONObject serialize()
+		{
+			JSONObject object = new JSONObject();
+			try
+			{
+				object.put(URL,url);
+				object.put(RETRIES,nRetries);
+				object.put(ERROR, errorStack);
+				object.put(BODY, body);
+				object.put(METHOD, method.name());
+				object.put(TIMESTAMP, timestamp);
+				JSONArray array = new JSONArray();
+				for(Header h : headers)
+				{
+					JSONObject jh = new JSONObject();
+					jh.put(NAME, h.getName());
+					jh.put(VALUE, h.getValue());
+					array.put(jh);
+				}
+				object.put(HEADERS,array);
+			} catch (JSONException e)
+			{
+				e.printStackTrace();
+			}
+			return object;
+		}
 	}
 }

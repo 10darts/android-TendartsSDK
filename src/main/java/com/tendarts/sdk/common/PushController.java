@@ -171,6 +171,7 @@ public class PushController
 				object.put("push_status", diagnostics );
 				object.put("model", model);
 				object.put("source",Configuration.instance(context).getInstallSource());
+				PendingCommunicationController.addPendingTokenInfo(object, context);
 				if( lang != null)
 				{
 					object.put("language", lang);
@@ -185,6 +186,7 @@ public class PushController
 
 			Log.d(TAG, "sendTokenAndVersion: "+data);
 			final String finalData = data;
+			final boolean hasCode = code != null;
 			ICommunicationObserver observer = new ICommunicationObserver()
 			{
 				@Override
@@ -205,7 +207,13 @@ public class PushController
 							{
 								Configuration.instance(context).setPushCode(code);
 								Configuration.instance(context).setPushSentToken(toSend);
+								PendingCommunicationController.onTokenSent(context);
 							}
+
+						}
+						else if( ! hasCode)
+						{
+							PendingCommunicationController.addPendingToken("registered with no code:"+data, context);
 
 						}
 						if (data.has("persona") && !data.isNull("persona"))
@@ -217,13 +225,15 @@ public class PushController
 					} catch (Exception e)
 					{
 						e.printStackTrace();
+						PendingCommunicationController.addPendingToken(e.getMessage(), context);
+
 					}
 					TendartsClient.instance(context).logEvent("Push", "sent token info", "");
 					Log.i(TAG, "succesfully sent token to backend " + token);
 				}
 
 				@Override
-				public void onFail(int operationId, String reason)
+				public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 				{
 					String code = Configuration.instance(context).getPushCode();
 					Util.checkUnauthorized(reason, context);
@@ -240,11 +250,12 @@ public class PushController
 									}
 
 									@Override
-									public void onFail(int operationId, String reason)
+									public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 									{
 										Util.checkUnauthorized(reason, context);
 										Log.e(TAG, "error sending token to backend " + token);
 										TendartsClient.instance(context).logEvent("Push", "error sending token info", reason);
+										PendingCommunicationController.addPendingToken("400:"+reason, context);
 									}
 								}, finalData, false);
 					} else
@@ -256,6 +267,7 @@ public class PushController
 						}
 						Log.e(TAG, "error sending token to backend " + token);
 						TendartsClient.instance(context).logEvent("Push", "error sending token info", reason);
+						PendingCommunicationController.addPendingToken(reason, context);
 					}
 
 				}

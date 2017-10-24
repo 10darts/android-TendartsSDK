@@ -16,9 +16,11 @@ import android.util.Log;
 
 import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.Model.Notification;
+import com.tendarts.sdk.common.PendingCommunicationController;
 import com.tendarts.sdk.common.Util;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
+import com.tendarts.sdk.communications.PendingCommunicationsService;
 import com.tendarts.sdk.gcm.GCMListenerService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -515,7 +517,7 @@ public class TendartsSDK
 					}
 
 					@Override
-					public void onFail(int operationId, String reason)
+					public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 					{
 						Log.d("DARTS", "could not send device access: "+reason);
 						TendartsClient.instance(context).logEvent("App","Can't device access",""+reason);
@@ -734,6 +736,8 @@ public class TendartsSDK
 			e.printStackTrace();
 		}
 
+		PendingCommunicationsService.startPendingCommunications(activity.getApplicationContext());
+
 
 	}//onCreate
 
@@ -844,11 +848,12 @@ public class TendartsSDK
 					}
 
 					@Override
-					public void onFail(int operationId, String reason)
+					public void onFail(int operationId, String reason, Communications.PendingCommunication pending)
 					{
 						Util.checkUnauthorized(reason,context);
 						TendartsClient.instance(context).logEvent("App","can't notify read",""+reason);
 						Log.d("DARTS", "push read failed: "+reason);
+						PendingCommunicationController.addPending(pending, context);
 					}
 				}, json,false);
 
@@ -876,11 +881,13 @@ public class TendartsSDK
 					}
 
 					@Override
-					public void onFail(int operationId, String reason)
+					public void onFail(int operationId, String reason,
+									   Communications.PendingCommunication pending)
 					{
 						Util.checkUnauthorized(reason,context);
 						TendartsClient.instance(context).logEvent("App","push all read failed",""+reason);
 						Log.d("DARTS", "push all read failed: "+reason);
+						PendingCommunicationController.addPending(pending, context);
 					}
 				}, json,false);
 		//todo:retries de parte del cliente o hacer cola?
@@ -1118,7 +1125,7 @@ public class TendartsSDK
 				}
 
 				@Override
-				public void onFail(int operationId, String reason)
+				public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 				{
 					Util.checkUnauthorized(reason,context);
 					TendartsClient.instance(context).logEvent("Notifications","error sending notification enabled config change",""+reason);
@@ -1172,15 +1179,19 @@ public class TendartsSDK
 					}
 
 					@Override
-					public void onFail(int operationId, String reason)
+					public void onFail(int operationId, String reason,
+									   Communications.PendingCommunication pending)
 					{
 						Util.checkUnauthorized(reason,context);
 						TendartsClient.instance(context).logEvent("App","can't notify follow",""+reason);
+						PendingCommunicationController.addPending(pending, context);
 						Log.d("DARTS", "push read failed: "+reason);
 					}
 				}, json,false);
 	}
 
+
+	static int linkRetries = 0;
 	/**
 	 * Links current device with your own user identifier
 	 * @param observer
@@ -1194,6 +1205,21 @@ public class TendartsSDK
 
 		try
 		{
+			String code = Configuration.instance(context).getPushCode();
+			if( code == null || code.length() < 3)
+			{
+				PendingCommunicationController.setPendingLink(userIdentifier, context);
+				String push = Configuration.instance(context).getPush();
+				if( push != null && push.length() >3)
+				{
+					PushController.sendTokenAndVersion(push,context);
+				}
+				if( observer != null)
+				{
+					observer.onFail("Device not registered yet, try a few seconds later");
+				}
+				return;
+			}
 
 			final JSONObject object = new JSONObject();
 			object.put("client_data",userIdentifier);
@@ -1225,8 +1251,10 @@ public class TendartsSDK
 				}
 
 				@Override
-				public void onFail(int operationId, String reason)
+				public void onFail(int operationId, String reason,
+								   Communications.PendingCommunication pc)
 				{
+					PendingCommunicationController.addPending(pc,context);
 					Util.checkUnauthorized(reason,context);
 					if( observer != null)
 					{
@@ -1296,7 +1324,7 @@ public class TendartsSDK
 				}
 
 				@Override
-				public void onFail(int operationId, String reason)
+				public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 				{
 					Util.checkUnauthorized(reason,context);
 					observer.onFail(reason);
@@ -1368,7 +1396,7 @@ public class TendartsSDK
 			}
 
 			@Override
-			public void onFail(int operationId, String reason)
+			public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 			{
 				Util.checkUnauthorized(reason,context);
 				Log.d("USR", "failed registration: "+reason);
@@ -1439,7 +1467,7 @@ public class TendartsSDK
 			}
 
 			@Override
-			public void onFail(int operationId, String reason)
+			public void onFail(int operationId, String reason, Communications.PendingCommunication pc)
 			{
 				Util.checkUnauthorized(reason,context);
 				Log.d("USR", "failed modification: "+reason);
