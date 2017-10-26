@@ -54,4 +54,12 @@ public interface ISDKCore
 	 * @return the main activity class name
 	 */
 	public String mainActivityClassName();
+
+
+	/**
+	 * If linkDeviceWithUserIdentifier has failed, an automatic retry is started, so when finally
+	 * the user is linked this method will be called
+	 */
+
+	public  void onUserLinkedToDevice();
 }

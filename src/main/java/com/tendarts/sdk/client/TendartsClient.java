@@ -387,6 +387,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * the user is linked this method will be called
 	 */
 
+	@Override
 	public  void onUserLinkedToDevice()
 	{
 
