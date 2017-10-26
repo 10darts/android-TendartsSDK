@@ -200,14 +200,22 @@ public class PushController
 					try
 					{
 						Log.d(TAG, "handleSuccess: " + data);
-						if (data.has("code") && !data.isNull("code"))
+						if (data.has("code") && !data.isNull("code") )
 						{
 							String code = data.getString("code");
 							if (code != null)
 							{
-								Configuration.instance(context).setPushCode(code);
-								Configuration.instance(context).setPushSentToken(toSend);
-								PendingCommunicationController.onTokenSent(context);
+								if( code.toLowerCase().contains("null"))
+								{
+									PendingCommunicationController.addPendingToken("registered with null in code:"+data, context);
+
+								}
+								else
+								{
+									Configuration.instance(context).setPushCode(code);
+									Configuration.instance(context).setPushSentToken(toSend);
+									PendingCommunicationController.onTokenSent(context);
+								}
 							}
 
 						}
