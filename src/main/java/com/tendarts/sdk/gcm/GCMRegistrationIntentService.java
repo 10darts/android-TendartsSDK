@@ -46,11 +46,17 @@ public class GCMRegistrationIntentService extends IntentService
 
 			String senderId = Configuration.instance(getApplicationContext())
 					.getGCMDefaultSenderId(getApplicationContext(),getApplicationInfo().packageName);
-			String sender2 = Configuration.instance(getApplicationContext()).getGCMDefaultSenderId(getApplicationContext());
 
-			Log.d(TAG, "Senders: "+senderId+" ,"+sender2);
+			//String sender2 = Configuration.instance(getApplicationContext()).getGCMDefaultSenderId(getApplicationContext());
+
+			Log.d(TAG, "Sender: "+senderId);
 
 			Util.printExtras(TAG,intent.getExtras());
+
+			if(senderId == null)
+			{
+				return;
+			}
 
 			// [START register_for_gcm]
 			// Initially this call goes out to the network to retrieve the token, subsequent calls

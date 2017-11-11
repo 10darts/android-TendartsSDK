@@ -439,7 +439,10 @@ public class Communications
 			{
 
 				String provider = getGProvider();
-
+				if(provider == null)
+				{
+					return false;
+				}
 				Boolean enabled = _locationManager
 						.isProviderEnabled(provider);
 				return enabled;

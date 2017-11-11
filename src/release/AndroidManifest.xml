@@ -21,6 +21,8 @@
 		</receiver>
 
 
+
+
 		<meta-data
 			android:name="sdk_accessToken"
 			android:value="${tendarts_sdk_access_token}"/>

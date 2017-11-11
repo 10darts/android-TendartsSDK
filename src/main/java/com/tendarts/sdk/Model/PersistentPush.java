@@ -145,10 +145,16 @@ public class PersistentPush
 	{
 
 		Intent backIntent = new Intent();
+		String accessToken =  Configuration.instance(context).getAccessToken(context);
+		if( accessToken == null )
+		{
+			android.util.Log.d(TAG, "notifyList: not access token");
+			return null;
+		}
 
 		backIntent.setAction("com.darts.sdk.OPEN_PUSH");
 		// backIntent.putExtra("dismiss", not_id);
-		backIntent.putExtra("sorg", Configuration.instance(context).getAccessToken(context).hashCode());
+		backIntent.putExtra("sorg",accessToken.hashCode());
 		push.serializeToExtras(backIntent);
 		backIntent.addFlags(flags);
 

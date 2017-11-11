@@ -10,6 +10,7 @@ import android.widget.RemoteViews;
 
 import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.Model.PersistentPush;
+import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.common.Configuration;
 
 import java.security.InvalidParameterException;
@@ -33,9 +34,14 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 
 
 
+	public final  static void refreshInstance()
+	{
+		_me = null;
+	}
+
 	public final static TendartsClient instance(Context context)
 	{
-		return instance(context,null);
+		return instance(context.getApplicationContext(),null);
 	}
 
 	public final static TendartsClient instance(Context context, ApplicationInfo info)
@@ -45,7 +51,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 
 		if( context != null)
 		{
-			context.getApplicationContext();
+			c = context.getApplicationContext();
 		}
 		if( _me == null)
 		{
@@ -67,7 +73,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 			{
 				name = Configuration.getClientClassName(c);
 			}
-			if( name != null)
+			if( name != null && name.length()>0)
 			{
 
 				Log.d(TAG, "client class: "+name);
@@ -99,7 +105,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 			}
 			else
 			{
-				Log.w(TAG, "could not get client class");
+				Log.w(TAG, "could not get client class: "+name);
 			}
 			if( _me == null)
 			{

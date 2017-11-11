@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
 import java.util.Date;
 
 /**
@@ -37,6 +38,16 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 	private final static String TOKEN_RETRIES = "sdk_token_retries";
 	private final static String PENDING_LINK = "sdk_pending_link";
 
+
+	private final static String S_GCM_SENDER_ID		="sdk_gcm_sender_id";
+	private final static String S_CLIENT_CLASS		="sdk_client_class";
+	private final static String	S_ACCESS_TOKEN 		="sdk_access_token";
+
+
+	private  final static String TESTING = "sdk_testing";
+	public static final String DELAYED_PREFIX = "delayed_";
+
+
 	private static Configuration _me;
 
 	private SharedPreferences _settings;
@@ -55,20 +66,27 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 	private String _accessToken = null;
 	private long _lastGeostatsSent;
 
-	private static Configuration instance()
+	private String appId= null;
+	private boolean inSoftMode = false;
+
+	static WeakReference<Context> _context = null;
+
+
+	public static Context getWeakContext()
 	{
-		if (_me == null)
+		if( _context == null)
 		{
-			return new Configuration(null);
+			return null;
 		}
-		return _me;
+		return _context.get();
 	}
 
 	public static Configuration instance(Context c)
 	{
+		//Log.d(TAG, "instance: "+c.getPackageName()+" app "+ c.getApplicationContext().getPackageName());
 		if (_me == null)
 		{
-			_me = new Configuration(c);
+			_me = new Configuration(c.getApplicationContext());
 		}
 		return _me;
 	}
@@ -83,9 +101,26 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		try
 		{
 
-
 			if (c != null)
 			{
+				_context = new WeakReference<Context>(c.getApplicationContext());
+
+				String appId = getApppId(c);
+				if(appId != null)
+				{
+					Log.d(TAG, "Configuration:  in soft mode:"+appId);
+					inSoftMode = true;
+					_settings = c.getSharedPreferences(appId, Context.MODE_PRIVATE);
+
+				}
+				else
+				{
+					inSoftMode = false;
+					_settings = c.getSharedPreferences(PRIVATE_PREFS, Context.MODE_PRIVATE);
+				}
+
+
+
 				_settings = c.getSharedPreferences(PRIVATE_PREFS, Context.MODE_PRIVATE);
 				_settings.registerOnSharedPreferenceChangeListener(this);
 
@@ -117,6 +152,30 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		}
 
 	}
+
+
+
+	public String getTest()
+	{
+		return _settings.getString(TESTING,null);
+	}
+
+	public void setTest( String test)
+	{
+		try
+		{
+			SharedPreferences.Editor editor = _settings.edit();
+			editor.putString(TESTING, test);
+			editor.apply();
+		}
+		catch (Exception e)
+		{
+			Log.e(TAG,"could not save test: "+e.getMessage());
+		}
+
+	}
+
+
 
 
 	//----------------------------------------------------------------------------------------------
@@ -175,7 +234,7 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		return _lastBadge;
 	}
 
-	public String getAccessToken()
+	private String getAccessToken()
 	{
 		return _accessToken;
 	}
@@ -221,16 +280,32 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			String id = bundle.getString("gcm_defaultSenderId");
 			Log.d(TAG, "gcm_defaultSenderId from " + ai + ": " + id);
 			Util.printExtras(TAG, bundle);
+
+			if( id == null || id.length() < 1)
+			{
+				if( inSoftMode)
+				{
+					return getSoftGCMDefaultSenderId();
+				}
+			}
+
 			return id;
 		} catch (Exception e)
 		{
+			if( inSoftMode)
+			{
+				return getSoftGCMDefaultSenderId();
+			}
+
 			Log.e(TAG, "Please add  gcm_sender_id in manifestPlaceholders" + e);
 		}
 		return null;
 	}
 
 
-	public String getGCMDefaultSenderId(Context context)
+
+
+	private String getGCMDefaultSenderId(Context context)
 	{
 		try
 		{
@@ -243,6 +318,13 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			Object o = bundle.get("gcm_defaultSenderId");
 			if (o == null)
 			{
+				if( o == null )
+				{
+					if( inSoftMode)
+					{
+						return getSoftGCMDefaultSenderId();
+					}
+				}
 				Log.e(TAG, "Please add  gcm_sender_id in manifestPlaceholders");
 				return null;
 			}
@@ -261,11 +343,31 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			return id;
 		} catch (Exception e)
 		{
+			if( inSoftMode)
+				{
+					return getSoftGCMDefaultSenderId();
+				}
 			Log.e(TAG, "Please add  gcm_sender_id in manifestPlaceholders");
 		}
 		return null;
 	}
 
+	private String getSoftGCMDefaultSenderId()
+	{
+		return _settings.getString(S_GCM_SENDER_ID,null);
+	}
+
+	private String getSoftClientClassName()
+	{
+		String className = _settings.getString(S_CLIENT_CLASS, null);
+		Log.d(TAG, "getSoftClientClassName: "+className);
+		return  className;
+	}
+
+	private String getSoftAccessToken()
+	{
+		return _settings.getString(S_ACCESS_TOKEN,null);
+	}
 
 	public static String getClientClassName(Context context, ApplicationInfo applicationInfo)
 	{
@@ -280,8 +382,16 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		}
 		Bundle bundle = info.metaData;
 		String id = bundle.getString("sdk_clientClass");
-		if (id == null)
+		if (id == null|| id.length() < 1)
 		{
+
+				if( Configuration.instance(context).inSoftMode)
+				{
+					Log.d(TAG, "getClientClassName: in soft mode, getting from config");
+					return Configuration.instance(context).getSoftClientClassName();
+				}
+
+
 			Log.e("SDK:Config", "Please add  tendarts_sdk_client_class:\"com.yourcompany.YourClientClass\" in manifestPlaceholders");
 			Log.d(TAG, "not found sdk_clientClass in :" + info.packageName);
 			Util.printExtras(TAG, bundle);
@@ -298,8 +408,14 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
 			Bundle bundle = ai.metaData;
 			String id = bundle.getString("sdk_clientClass");
-			if (id == null)
+			if (id == null|| id.length() < 1)
 			{
+					if( Configuration.instance(context).inSoftMode)
+					{
+						Log.d(TAG, "getClientClassName:  in soft mode");
+						return Configuration.instance(context).getSoftClientClassName();
+					}
+
 				Log.e("SDK:Config", "Please add  tendarts_sdk_client_class:\"com.yourcompany.YourClientClass\" in manifestPlaceholders");
 
 				Log.d(TAG, "getClientClassName: getClientClass not found for sdk_clientClass in :");
@@ -314,7 +430,10 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		}
 	}
 
-	public String getAccessToken(Context context)
+
+
+
+	public static String getAccessToken(Context context)
 	{
 		try
 		{
@@ -323,6 +442,19 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			String id = bundle.getString("sdk_accessToken");
 			if (id != null)
 			{
+				if( id. startsWith(DELAYED_PREFIX))
+				{
+					String app = id.substring(DELAYED_PREFIX.length());
+					if( app == null ||app.length()<1)
+					{
+						return null;
+					}
+					instance(context).appId = app;
+					instance(context).inSoftMode = true;
+
+					return Configuration.instance(context).getSoftAccessToken();
+
+				}
 				String token = Configuration.instance(context).getAccessToken();
 				if (!id.equals(token))
 				{
@@ -332,8 +464,14 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			{
 				id = Configuration.instance(context).getAccessToken();
 			}
-			if (id == null || id.length() < 3)
+			if (id == null || id.length() < 1)
 			{
+
+					if( Configuration.instance(context).inSoftMode)
+					{
+						return Configuration.instance(context).getSoftAccessToken();
+					}
+
 				Log.w(TAG, "Please add  tendarts_sdk_access_token:\"YOUR ACCESS TOKEN\" in manifestPlaceholders");
 			}
 			return id;
@@ -486,6 +624,47 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			Log.e(TAG, "could not save INSTALL SOURCE: " + e.getMessage());
 		}
 	}
+
+
+	public void setSoftGCMDefaultSenderId( String value)
+	{
+		try
+		{
+			SharedPreferences.Editor editor = _settings.edit();
+			editor.putString(S_GCM_SENDER_ID, value);
+			editor.commit();
+		} catch (Exception e)
+		{
+			Log.e(TAG, "could not save INSTALL SOURCE: " + e.getMessage());
+		}
+	}
+
+	public void setSoftClientClassName( String value)
+	{
+		try
+		{
+			SharedPreferences.Editor editor = _settings.edit();
+			editor.putString(S_CLIENT_CLASS, value);
+			editor.commit();
+		} catch (Exception e)
+		{
+			Log.e(TAG, "could not save INSTALL SOURCE: " + e.getMessage());
+		}
+	}
+
+	public void setSoftAccessToken( String value)
+	{
+		try
+		{
+			SharedPreferences.Editor editor = _settings.edit();
+			editor.putString(S_ACCESS_TOKEN, value);
+			editor.commit();
+		} catch (Exception e)
+		{
+			Log.e(TAG, "could not save INSTALL SOURCE: " + e.getMessage());
+		}
+	}
+
 
 
 	/**
@@ -705,6 +884,40 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		{
 			Log.e(TAG, "could not save : " + e.getMessage());
 		}
+	}
+
+
+
+	private String getApppId(Context context)
+	{
+		try
+		{
+			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+			Bundle bundle = ai.metaData;
+			String id = bundle.getString("sdk_accessToken");
+			if (id != null)
+			{
+				if (id.startsWith(DELAYED_PREFIX))
+				{
+					String app = id.substring(DELAYED_PREFIX.length());
+					if (app == null || app.length() < 1)
+					{
+						return null;
+					}
+					appId = app;
+					inSoftMode = true;
+					return app;
+
+				}
+			}
+
+		} catch (Exception e)
+		{
+			Log.d(TAG, "default mode");
+			return null;
+
+		}
+		return null;
 	}
 
 

@@ -90,6 +90,9 @@
 
 
 		<!--
+
+
+
 		<meta-data
 			android:name="sdk_accessToken"
 			android:value="str:${tendarts_sdk_access_token}"/>

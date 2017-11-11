@@ -440,6 +440,12 @@ public class PendingCommunicationController
 				Log.d(TAG, "doPendingLink: no pending link");
 				return;
 			}
+			if( Configuration.getAccessToken(context)== null)
+			{
+				Log.d(TAG, "doPendingLink: not init");
+				return;
+			}
+
 			String code = Configuration.instance(context).getPushCode();
 			if( code == null || code.length() < 3)
 			{

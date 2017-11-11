@@ -54,6 +54,7 @@ public class TendartsSDK
 	boolean _stackNotifications = false;
 	boolean _alwaysShowLastNotification = true;
 	boolean _limitNotificationSoundAndVibrationTime = true;
+	boolean _onlySmallIcon = false;
 	int _notificationSoundAndVibrationFirstHour = 8;
 	int _notificationSoundAndVibrationLastHour = 23;//>=start < last
 	int _notificationColorResource = R.color.notification_color;
@@ -224,6 +225,19 @@ public class TendartsSDK
 	//---------------------------------------
 
 	/**
+	 * Set that notifications only display small icon
+	 * @param onlySmallIcon
+	 * @return SDK instance so you can concatenate calls
+	 */
+	public TendartsSDK setOnlySmallIcon(boolean onlySmallIcon)
+	{
+		_onlySmallIcon = onlySmallIcon;
+		return this;
+	}
+	//---------------------------------------
+
+
+	/**
 	 * Set the large icon resource, if not set your app icon is used
 	 * @param largeIconResource large icon resource
 	 * @return SDK instance so you can concatenate calls
@@ -245,6 +259,10 @@ public class TendartsSDK
 		try
 		{
 
+			if( _onlySmallIcon)
+			{
+				return null;
+			}
 
 			if (context == null || _largeIconResource != 0)
 			{
@@ -499,6 +517,13 @@ public class TendartsSDK
 			_googleUpdates.onResume();
 		}
 
+
+		if( Configuration.getAccessToken(context)== null)
+		{
+
+			return;
+		}
+
 		String pushCode = Configuration.instance(context).getPushCode();
 		if( pushCode != null && ! accessSent)
 		{
@@ -576,10 +601,17 @@ public class TendartsSDK
 
 			try
 			{
-				if( Configuration.shouldSendGeostats(null))
+				Context weak = Configuration.getWeakContext();
+
+				if( weak != null && Configuration.shouldSendGeostats(weak))
 				{
-					Communications.sendGeoStats(Util.getProvider());
-					Configuration.notifyGeostatsSent(null);
+					if( Configuration.getAccessToken(weak)!= null)
+					{
+						Communications.sendGeoStats(Util.getProvider());
+						Configuration.notifyGeostatsSent(weak);
+
+					}
+
 				}
 
 			}
@@ -726,8 +758,12 @@ public class TendartsSDK
 		{
 			if( Configuration.shouldSendGeostats(activity.getApplicationContext()))
 			{
-				Communications.sendGeoStats(Util.getProvider());
-				Configuration.notifyGeostatsSent(activity.getApplicationContext());
+				if( Configuration.getAccessToken(activity.getApplicationContext())!= null)
+				{
+					Communications.sendGeoStats(Util.getProvider());
+					Configuration.notifyGeostatsSent(activity.getApplicationContext());
+				}
+
 			}
 
 		}
@@ -832,6 +868,11 @@ public class TendartsSDK
 	{
 
 
+		if( Configuration.getAccessToken(context)== null)
+		{
+
+			return;
+		}
 		String json = Util.getDeviceJson(context);
 
 		String url = String.format(Constants.pushRead, notificationCode);
@@ -867,6 +908,11 @@ public class TendartsSDK
 	 */
 	public static void notifyAllNotificationsRead(final Context context)
 	{
+		if( Configuration.getAccessToken(context)== null)
+		{
+			return;
+		}
+
 		String json = Util.getDeviceJson(context);
 		Log.d("NET", "sending pchd: "+json);
 		Communications.patchData(Constants.pushAllRead,
@@ -1089,6 +1135,11 @@ public class TendartsSDK
 		Configuration.instance(context).setNotificationsEnabled(isEnabled);
 		try
 		{
+			if( Configuration.getAccessToken(context)== null)
+			{
+
+				return;
+			}
 
 
 			//String data = "{ \"token\":\"" + Configuration.instance(context).getPush() + "\", \"platform\":0, \"disabled\":" + (isEnabled ? "false" : "true") +" }";
@@ -1163,6 +1214,12 @@ public class TendartsSDK
 
 	public static void notificationClicked(String notificationCode, final Context context)
 	{
+
+		if( Configuration.getAccessToken(context)== null)
+		{
+			return;
+		}
+
 		String json = Util.getDeviceJson(context);
 
 		String url = String.format(Constants.pushClicked, notificationCode);
@@ -1205,6 +1262,17 @@ public class TendartsSDK
 
 		try
 		{
+
+
+			if( Configuration.getAccessToken(context)== null)
+			{
+				if( observer != null)
+				{
+					observer.onFail("SDK not properly initialized");
+				}
+				return;
+			}
+
 			String code = Configuration.instance(context).getPushCode();
 			if( code == null || code.length() < 3)
 			{
@@ -1284,6 +1352,16 @@ public class TendartsSDK
 		{
 			throw new InvalidParameterException("observer can't be null");
 		}
+
+		if( Configuration.getAccessToken(context)== null)
+		{
+			if( observer != null)
+			{
+				observer.onFail("SDK not properly initialized");
+			}
+			return;
+		}
+
 		String user = Configuration.instance(context).getUserCode();
 		if( user == null )
 		{
@@ -1363,6 +1441,15 @@ public class TendartsSDK
 			throw new InvalidParameterException("provide an observer");
 		}
 
+		if( Configuration.getAccessToken(context)== null)
+		{
+			if( observer != null)
+			{
+				observer.onFail("SDK not properly initialized");
+			}
+			return;
+		}
+
 		final JSONObject object = new JSONObject();
 		try
 		{
@@ -1408,6 +1495,28 @@ public class TendartsSDK
 
 
 	/**
+	 * Delayed intit
+	 * @param accessToken
+	 * @param gcmSenderId
+	 * @param clientClassName
+	 * @param context
+	 */
+	public static  void delayedInit( String accessToken,String gcmSenderId,String clientClassName, Context context)
+	{
+		TendartsClient.refreshInstance();
+		Configuration.instance(context).setSoftAccessToken(accessToken);
+		Configuration.instance(context).setAccessToken(accessToken);
+		Configuration.instance(context).setSoftClientClassName(clientClassName);
+		Configuration.instance(context).setSoftGCMDefaultSenderId(gcmSenderId);
+
+		//fire registration
+		Intent intent = new Intent(context.getApplicationContext(), GCMRegistrationIntentService.class);
+		context.startService(intent);
+
+
+	}
+
+	/**
 	 * Modify user data
 	 *
 	 * only fill the fields you want to modify, any null parameter will be kept unmodified
@@ -1426,9 +1535,19 @@ public class TendartsSDK
 			throw new InvalidParameterException("provide an observer");
 		}
 
+		if( Configuration.getAccessToken(context)== null)
+		{
+			if( observer != null)
+			{
+				observer.onFail("SDK not properly initialized");
+			}
+			return;
+		}
+
 		if( Configuration.instance(context).getUserCode() == null)
 		{
 			observer.onFail("User not yet registered, please register first");
+			return;
 		}
 		//todo: asignar errores numericos a toda la casuistica
 

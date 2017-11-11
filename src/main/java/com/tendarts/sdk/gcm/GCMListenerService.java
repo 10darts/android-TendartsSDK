@@ -67,6 +67,12 @@ public class GCMListenerService extends GcmListenerService
 		Util.printExtras(TAG, data);
 
 
+		if( Configuration.getAccessToken(context)== null)
+		{
+			android.util.Log.d(TAG, "onMessageReceived: sdk not configured");
+			return;
+		}
+
 		Bundle extras =data;
 
 
@@ -862,7 +868,13 @@ public class GCMListenerService extends GcmListenerService
 
 			backIntent.setAction("com.darts.SDK.OPEN_LIST");
 			backIntent.putExtra("dismiss", not_id);
-			backIntent.putExtra("sorg", Configuration.instance(context).getAccessToken(context).hashCode());
+			String accessToken = Configuration.instance(context).getAccessToken(context);
+			if( accessToken == null )
+			{
+				android.util.Log.d(TAG, "notifyList: not access token");
+				return;
+			}
+			backIntent.putExtra("sorg", accessToken.hashCode());
 
 			//backIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
 

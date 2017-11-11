@@ -94,6 +94,12 @@ public class PushController
 
 
 		TendartsSDK.initCommunications(context);
+
+		if( Configuration.getAccessToken(context)== null)
+		{
+
+			return;
+		}
 		int diagnostics = 0;
 
 		String model = "";

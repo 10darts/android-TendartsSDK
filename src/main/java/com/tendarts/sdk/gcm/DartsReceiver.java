@@ -43,6 +43,7 @@ public class DartsReceiver extends BroadcastReceiver
 		if(intent!=null){
 
 
+
 			String action = intent.getAction();
 
 			Bundle extras = intent.getExtras();
@@ -52,10 +53,18 @@ public class DartsReceiver extends BroadcastReceiver
 				return;
 			}
 
+
 			int origin = extras.getInt("sorg");
-			if( origin != Configuration.instance(context).getAccessToken(context).hashCode() )
+			Log.d(TAG, "onReceive:  origin: "+origin +" "+action);
+			String accessToken = Configuration.instance(context).getAccessToken(context);
+			if( accessToken == null)
 			{
-				Log.d(TAG, "onReceive:  not for me" );
+				android.util.Log.d(TAG, "onReceive: not access token");
+				return;
+			}
+			if( origin != accessToken.hashCode() )
+			{
+				Log.d(TAG, "onReceive:  not for me: "+origin+ "   " + accessToken.hashCode() );
 				return;
 			}
 
@@ -89,7 +98,6 @@ public class DartsReceiver extends BroadcastReceiver
 						public void run()
 						{
 							Notification push  = new Notification(intent);
-
 							TendartsSDK.notificationClicked(push.getCode(), context);
 
 							dismissNotificationIfNeeded(context,intent);
@@ -119,11 +127,19 @@ public class DartsReceiver extends BroadcastReceiver
 									}
 								}
 							}
+							else
+							{
+								Log.d(TAG, "opened by client ");
+							}
 						}
 					});
 					thread.start();
 
 
+				}
+				else
+				{
+					Log.d(TAG, "onReceive: can't deserialize");
 				}
 			}
 			else if("com.darts.sdk.OPEN_LIST".equalsIgnoreCase(action))
