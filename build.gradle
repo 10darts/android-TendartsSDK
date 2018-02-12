@@ -1,13 +1,4 @@
 apply plugin: 'com.android.library'
-//apply plugin: 'android-library'
-/*
-configurations {
-    sdkTestingDebug
-    sdkTestingRelease
-    sdkProductionDebug
-    sdkProductionRelease
-}
-*/
 
 ext {
     PUBLISH_GROUP_ID = 'com.10darts'
@@ -39,13 +30,12 @@ ext {
 }
 
 android {
-    compileSdkVersion 24//21
-    buildToolsVersion "25.0.1"
+    compileSdkVersion 26
+    buildToolsVersion '26.0.3'
 
     defaultConfig {
         minSdkVersion 15
-        //targetSdkVersion 25
-        targetSdkVersion 23
+        targetSdkVersion 26
         versionCode 1
         versionName PUBLISH_VERSION
 
@@ -53,36 +43,37 @@ android {
 
     }
     buildTypes {
+
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'library.pro' //'proguard-rules.pro'
             android.libraryVariants.all
                     {
-                        variant -> variant.outputs.each
+                        variant -> variant.outputs.all()
                                 {
                                     output ->
-                                        def outputFile = output.outputFile;
-                                        if( !outputFile.name.contains("esting")
-                                                && outputFile.name.endsWith(".aar")
-                                                &&!outputFile.name.contains("ebug"))
+                                        if( !outputFileName.contains("esting")
+                                                && outputFileName.endsWith(".aar")
+                                                &&!outputFileName.contains("ebug"))
                                         {
-                                            output.outputFile = new File(outputFile.parent, "sdk.aar")
+                                            println "variant output name: " + outputFileName
+                                            outputFileName = "sdk.aar"
                                         }
 
-
-                        }
+                                }
                     }
         }
     }
 
-    publishNonDefault false
-    productFlavors {
-        sdkTesting {
+    flavorDimensions "default"
 
+    // These flavors also point to different Constants environments
+    productFlavors {
+
+        sdkTesting {
             //signingConfig signingConfigs.production
         }
         sdk {
-
             //signingConfig signingConfigs.production
         }
 
@@ -95,34 +86,25 @@ android {
         pickFirst 'META-INF/*'
     }
 
-
-
-   useLibrary 'org.apache.http.legacy'
+    useLibrary 'org.apache.http.legacy'
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    //compile 'com.android.support:appcompat-v7:25.1.1'
-    //compile 'com.android.support:appcompat-v7:23.0.3'
 
+    // Play Services
+    implementation ('com.google.android.gms:play-services-gcm:11.8.0'){ transitive = true }
+    implementation 'com.google.android.gms:play-services-location:11.8.0'
 
-    //compile 'com.android.support:appcompat-v7:25.0.1'--------
+    testImplementation 'junit:junit:4.12'
 
-    compile ('com.google.android.gms:play-services-gcm:9.8.0'){ transitive = true }
-    compile 'com.google.android.gms:play-services-location:9.8.0'
-    //compile 'com.squareup.picasso:picasso:2.5.2'
-
-    testCompile 'junit:junit:4.12'
-    //compile group: 'org.apache.httpcomponents' , name: 'httpclient-android' , version: '4.3.5.1'
-    //compile group: 'org.apache.httpcomponents' , name: 'httpmime' , version: '4.3.5'
-    compile 'org.apache.httpcomponents:httpclient-android:4.3.5'
-    compile 'org.apache.httpcomponents:httpmime:4.3.5'
-    //compile 'org.apache.httpcomponents:httpcore:4.3.2'
-
-
+    implementation 'org.apache.httpcomponents:httpclient-android:4.3.5'
+    implementation ('org.apache.httpcomponents:httpmime:4.3.5') {
+        exclude module: 'httpclient'
+    }
 
     //exclude module:'Onpublico','common','glass','mobile','wear'
 

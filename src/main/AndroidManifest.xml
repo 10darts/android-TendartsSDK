@@ -1,9 +1,7 @@
 <manifest package="com.tendarts.sdk"
 
-		  xmlns:android="http://schemas.android.com/apk/res/android"
->
-
-
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	>
 
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -20,14 +18,14 @@
 -->
 
 	<application android:allowBackup="true"
-				 android:label="@string/app_name"
-				 android:supportsRtl="true"
-	>
+		android:label="@string/app_name"
+		android:supportsRtl="true"
+		>
 
 
 		<receiver
 			android:name="com.tendarts.sdk.gcm.DartsReceiver"
-		>
+			>
 			<intent-filter>
 				<action android:name="com.darts.sdk.CLEAR_PUSHES"/>
 				<action android:name="com.darts.sdk.OPEN_PUSH" />
@@ -48,7 +46,8 @@
 				<action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
 			</intent-filter>
 		</receiver>
-	<!--	<receiver
+
+		<receiver
 			android:name="com.google.android.gms.gcm.GcmReceiver"
 			android:exported="true"
 			android:permission="com.google.android.c2dm.permission.SEND" >
@@ -57,10 +56,7 @@
 				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
 				<category android:name="${applicationId}" />
 			</intent-filter>
-
-
-		</receiver>-->
-
+		</receiver>
 
 
 		<service
@@ -88,23 +84,18 @@
 			android:name="com.tendarts.sdk.monitoring.IntentMonitorService"
 			android:exported="false"/>
 
-
-		<!--
-
-
-
 		<meta-data
 			android:name="sdk_accessToken"
-			android:value="str:${tendarts_sdk_access_token}"/>
+			android:value="${tendarts_sdk_access_token}"/>
 
 		<meta-data
 			android:name="sdk_clientClass"
-			android:value="str:${tendarts_sdk_client_class}"/>
+			android:value="${tendarts_sdk_client_class}"/>
 
 		<meta-data
-			android:name="str:${gcm_defaultSenderId}"
-			android:value="760485215389\0"
-		/>-->
+			android:name="gcm_defaultSenderId"
+			android:value="${gcm_sender_id}\0"
+			/>
 
 	</application>
 
