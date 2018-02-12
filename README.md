@@ -1,24 +1,12 @@
-# 10 Darts sample project #
+# 10darts Android SDK
 
-Sample project that integrates the [10Darts library](https://github.com/10darts/android-TendartsSDK). The purpose of this project is double. On the one hand, to create an app that integrates the SDK and allows you to test the different functionalities it offers, and on the other hand, to have the possibility to work on the SDK module directly on the same project.
+[![Join the chat at https://gitter.im/10darts/android-sdk](https://badges.gitter.im/10darts/android-sdk.svg)](https://gitter.im/10darts/android-sdk?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## Index ##
+#### Installation
 
-- [Requirements](#markdown-header-requirements)
-- [SDK integration steps](#markdown-header-sdk-integration-steps)
+See 10dart's [Android SDK Setup](http://docs.10darts.com/tutorials/android/setup.html) guide for documentation.
 
-## Requirements ##
+#### Support
 
-* Android 4.4(19) or higher
-* Andriod Studio 3.0.1 or higher
-
-### SDK integration steps ###
-
-We have a [setup guide](https://docs.10darts.com/tutorials/android/setup.html) and a [guide for GCM](https://docs.10darts.com/faq/android/ gcm.html).
-
-However there is a section that is not entirely clear, it is necessary to create an app in the dashborad of 10 Darts:
-
-![IMAGE](docs/img/dashboard_create_app.png)
-
-
-
+If you have some feature requests or bug reports related with the Android SDK, you can use the
+the [Github issue tracker](https://github.com/10darts/android-sdk/issues) from this repository,
