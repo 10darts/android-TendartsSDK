@@ -1,0 +1,102 @@
+<manifest package="com.tendarts.sdk"
+
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	>
+
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+	<uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.VIBRATE" />
+
+	<!--
+	<permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+	<uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
+-->
+
+	<application android:allowBackup="true"
+		android:label="@string/app_name"
+		android:supportsRtl="true"
+		>
+
+
+		<receiver
+			android:name="com.tendarts.sdk.gcm.DartsReceiver"
+			>
+			<intent-filter>
+				<action android:name="com.darts.sdk.CLEAR_PUSHES"/>
+				<action android:name="com.darts.sdk.OPEN_PUSH" />
+				<action android:name="com.darts.sdk.OPEN_LIST"/>
+			</intent-filter>
+		</receiver>
+
+		<service
+			android:name=".communications.PendingCommunicationsService"
+			android:exported="false">
+		</service>
+
+		<receiver
+			android:name=".communications.NetworkChangeReceiver"
+			android:enabled="false"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+			</intent-filter>
+		</receiver>
+
+		<receiver
+			android:name="com.google.android.gms.gcm.GcmReceiver"
+			android:exported="true"
+			android:permission="com.google.android.c2dm.permission.SEND" >
+			<intent-filter>
+				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
+				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+				<category android:name="${applicationId}" />
+			</intent-filter>
+		</receiver>
+
+
+		<service
+			android:name="com.tendarts.sdk.gcm.GCMListenerService"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+			</intent-filter>
+		</service>
+
+		<service
+			android:name="com.tendarts.sdk.gcm.GCMInstanceIdListener"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="com.google.android.gms.iid.InstanceID"/>
+			</intent-filter>
+		</service>
+
+		<service
+			android:name="com.tendarts.sdk.gcm.GCMRegistrationIntentService"
+			android:exported="false">
+		</service>
+
+		<service
+			android:name="com.tendarts.sdk.monitoring.IntentMonitorService"
+			android:exported="false"/>
+
+		<meta-data
+			android:name="sdk_accessToken"
+			android:value="${tendarts_sdk_access_token}"/>
+
+		<meta-data
+			android:name="sdk_clientClass"
+			android:value="${tendarts_sdk_client_class}"/>
+
+		<meta-data
+			android:name="gcm_defaultSenderId"
+			android:value="${gcm_sender_id}\0"
+			/>
+
+	</application>
+
+</manifest>

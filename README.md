@@ -5,7 +5,7 @@ Sample project that integrates the [10Darts library](https://github.com/10darts/
 ## Index ##
 
 - [Requirements](#markdown-header-requirements)
-- [Integración del SDK](#markdown-header-sdk-integration-steps)
+- [SDK integration steps](#markdown-header-sdk-integration-steps)
 
 ## Requirements ##
 
