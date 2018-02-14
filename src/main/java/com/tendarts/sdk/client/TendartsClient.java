@@ -41,7 +41,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 
 	public final static TendartsClient instance(Context context)
 	{
-		return instance(context.getApplicationContext(),null);
+		return instance(context,null);
 	}
 
 	public final static TendartsClient instance(Context context, ApplicationInfo info)

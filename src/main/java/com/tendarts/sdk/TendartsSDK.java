@@ -675,15 +675,12 @@ public class TendartsSDK
 								final ILocationAlerter locationAlerter)
 	{
 
-
-		initCommunications(activity.getApplicationContext());
-
-		if( activity == null)
-		{
+		if( activity == null) {
 			throw new InvalidParameterException("activity should not be null, pass your main activity");
 		}
-		if( locationAlerter == null)
-		{
+		initCommunications(activity.getApplicationContext());
+
+		if( locationAlerter == null) {
 			throw new InvalidParameterException("you should provide an instance that implements ILocationAlerter");
 		}
 		Communications.setLocationAlerter(new Communications.ILocationAlerter()
