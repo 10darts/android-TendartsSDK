@@ -94,7 +94,7 @@
 
 		<meta-data
 			android:name="gcm_defaultSenderId"
-			android:value="${gcm_sender_id}\0"
+			android:value="\ ${gcm_sender_id}"
 			/>
 
 	</application>
