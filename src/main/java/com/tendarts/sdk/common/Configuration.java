@@ -278,8 +278,6 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(packageName, PackageManager.GET_META_DATA);
 			Bundle bundle = ai.metaData;
 			String id = bundle.getString("gcm_defaultSenderId");
-			// TODO: this removes the last 0, but the fix should be other
-			id = id.substring(0, id.length()-1);
 			Log.d(TAG, "gcm_defaultSenderId from " + ai + ": " + id);
 			Util.printExtras(TAG, bundle);
 
