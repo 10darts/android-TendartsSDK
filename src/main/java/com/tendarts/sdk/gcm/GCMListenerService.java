@@ -1,5 +1,6 @@
 package com.tendarts.sdk.gcm;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -16,23 +17,21 @@ import android.text.style.StyleSpan;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.tendarts.sdk.common.PendingCommunicationController;
-import com.tendarts.sdk.communications.Communications;
-import com.tendarts.sdk.communications.ICommunicationObserver;
-import com.tendarts.sdk.communications.IImageDownloadObserver;
 import com.google.android.gms.gcm.GcmListenerService;
-
+import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.Model.Push;
-import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.client.INotifications;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
 import com.tendarts.sdk.common.Constants;
+import com.tendarts.sdk.common.PendingCommunicationController;
 import com.tendarts.sdk.common.PushController;
 import com.tendarts.sdk.common.Util;
-
+import com.tendarts.sdk.communications.Communications;
+import com.tendarts.sdk.communications.ICommunicationObserver;
+import com.tendarts.sdk.communications.IImageDownloadObserver;
 
 import org.json.JSONObject;
 
@@ -48,6 +47,7 @@ public class GCMListenerService extends GcmListenerService
 {
 	private static final String TAG = "GCM Listener";
 	public static int not_id = PushController.NOTIFICATION_ID;
+	private final String DEFAULT_CHANNEL_ID = "default_channel_id";
 
 
 	//todo cambiar single_id por id push cuando no stacked
@@ -429,7 +429,7 @@ public class GCMListenerService extends GcmListenerService
 					e.printStackTrace();
 				}
 
-				final  NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+				final  NotificationCompat.Builder builder = new NotificationCompat.Builder(context, DEFAULT_CHANNEL_ID)
 						.setColor(color)
 						.setSmallIcon(TendartsSDK.instance().getSmallIconResource())
 						.setContentTitle(title)
@@ -451,6 +451,16 @@ public class GCMListenerService extends GcmListenerService
 				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)//16
 				{
 					builder.setPriority(android.app.Notification.PRIORITY_HIGH);
+				}
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					String defaultNotificationChannelId = Configuration.getDefaultNotificationChannelId(context);
+					NotificationChannel notificationChannel = new NotificationChannel(
+							DEFAULT_CHANNEL_ID,
+							defaultNotificationChannelId,
+							NotificationManager.IMPORTANCE_HIGH
+					);
+					mNotificationManager.createNotificationChannel(notificationChannel);
 				}
 
 				if( makeSound)

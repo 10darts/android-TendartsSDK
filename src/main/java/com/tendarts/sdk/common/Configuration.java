@@ -5,7 +5,12 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
+
+import com.tendarts.sdk.R;
+
+import org.w3c.dom.Text;
 
 import java.lang.ref.WeakReference;
 import java.util.Date;
@@ -37,7 +42,7 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 	private final static String PENDING_TOKEN = "sdk_pending_token";
 	private final static String TOKEN_RETRIES = "sdk_token_retries";
 	private final static String PENDING_LINK = "sdk_pending_link";
-
+	private final static String DEFAULT_NOTIFICATION_CHANNEL_ID = "com.tendarts.sdk.default_channel_id";
 
 	private final static String S_GCM_SENDER_ID		="sdk_gcm_sender_id";
 	private final static String S_CLIENT_CLASS		="sdk_client_class";
@@ -62,9 +67,10 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 	private String _installSource;
 	private boolean _notificationsEnabled = true;
 	private int _lastBadge;
-	private String _userCode;
+	private String _defaultNotificationChannelId;
 	private String _accessToken = null;
 	private long _lastGeostatsSent;
+	private String _userCode;
 
 	private String appId= null;
 	private boolean inSoftMode = false;
@@ -237,6 +243,11 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 	private String getAccessToken()
 	{
 		return _accessToken;
+	}
+
+	private String getDefaultNotificationChannelId()
+	{
+		return _defaultNotificationChannelId;
 	}
 
 	public String getPendingCommunications()
@@ -483,6 +494,34 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		}
 	}
 
+	public static String getDefaultNotificationChannelId(Context context) {
+
+		try {
+			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+			Bundle bundle = ai.metaData;
+			String id = bundle.getString(DEFAULT_NOTIFICATION_CHANNEL_ID);
+
+			if (TextUtils.isEmpty(id)) {
+				Log.w(TAG, "(Optional) Add to your manifest <meta-data android:name=\"com.tendarts.sdk.default_channel_id\"\n" +
+						"android:value=\"@string/default_notification_channel_id\"/>");
+				// Get it from sdk strings
+				id = context.getString(R.string.default_notification_channel_id);
+			}
+
+			String defaultNotificationChannelId = Configuration.instance(context).getDefaultNotificationChannelId();
+			if (!id.equals(defaultNotificationChannelId)) {
+				Configuration.instance(context).setDefaultNotificationChannelId(id);
+			}
+			return id;
+
+		} catch (Exception e) {
+			Log.w(TAG, "(Optional) Add to your manifest <meta-data android:name=\"com.tendarts.sdk.default_channel_id\"\n" +
+					"android:value=\"@string/default_notification_channel_id\"/>");
+			return null;
+		}
+
+	}
+
 	//----------------------------------------------------------------------------------------------
 	//              SETTERS
 	//----------------------------------------------------------------------------------------------
@@ -665,6 +704,19 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		}
 	}
 
+	public void setDefaultNotificationChannelId(String channelId) {
+
+		_defaultNotificationChannelId = channelId;
+
+		try {
+			SharedPreferences.Editor editor = _settings.edit();
+			editor.putString(DEFAULT_NOTIFICATION_CHANNEL_ID, channelId);
+			editor.apply();
+		} catch (Exception e) {
+			Log.e(TAG, "could not save default channelId: " + e.getMessage());
+		}
+
+	}
 
 
 	/**
