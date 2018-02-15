@@ -505,7 +505,7 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 				Log.w(TAG, "(Optional) Add to your manifest <meta-data android:name=\"com.tendarts.sdk.default_channel_id\"\n" +
 						"android:value=\"@string/default_notification_channel_id\"/>");
 				// Get it from sdk strings
-				id = context.getString(R.string.default_notification_channel_id);
+				id = context.getString(R.string.tendarts_default_notification_channel_id);
 			}
 
 			String defaultNotificationChannelId = Configuration.instance(context).getDefaultNotificationChannelId();
