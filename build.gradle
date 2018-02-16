@@ -107,12 +107,12 @@ dependencies {
     })
 
     // Play Services
-    implementation "com.google.android.gms:play-services-gcm:${playServicesVersion}"
+    implementation ("com.google.android.gms:play-services-gcm:${playServicesVersion}") { transitive = true }
     implementation "com.google.android.gms:play-services-location:${playServicesVersion}"
 
     implementation 'org.apache.httpcomponents:httpclient-android:4.3.5'
     implementation ('org.apache.httpcomponents:httpmime:4.3.5') {
-        exclude group: 'com.android.support',  module: 'support-v4'
+        exclude module: 'httpclient'
     }
 
     //exclude module:'Onpublico','common','glass','mobile','wear'
