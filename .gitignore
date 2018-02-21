@@ -45,3 +45,9 @@ Thumbs.db
 # Localio
 .localio.yml
 Gemfile.lock
+
+# Cert info
+cert_release.properties
+
+# Maven credentials info
+credentials.properties
