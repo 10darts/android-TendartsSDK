@@ -19,6 +19,11 @@ def releaseUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
 
 def localReleaseDest = "${buildDir}/release/${version}"
 
+def propertiesFile = rootProject.file('sdk/credentials.properties')
+def propertiesData = new Properties()
+propertiesData.load(new FileInputStream(propertiesFile))
+
+
 task androidJavadocs(type: Javadoc) {
     failOnError = false
     source = android.sourceSets.main.java.srcDirs
@@ -46,10 +51,10 @@ uploadArchives {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
         // Add other pom properties here if you want (developer details / licenses)
 
-        repository(url: releaseUrl) { authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)  }
+        repository(url: releaseUrl) { authentication(userName: propertiesData['NEXUS_USERNAME'], password: propertiesData['NEXUS_PASSWORD'])  }
 
         snapshotRepository(url: snapshotUrl) {
-            authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)
+            authentication(userName: propertiesData['NEXUS_USERNAME'], password: propertiesData['NEXUS_PASSWORD'])
         }
 
         pom.project{
@@ -92,7 +97,7 @@ uploadArchives {
         //repository(url: releaseUrl) { authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)  }
 
         snapshotRepository(url: snapshotUrl) {
-            authentication(userName: NEXUS_USERNAME, password: NEXUS_PASSWORD)
+            authentication(userName: propertiesData['NEXUS_USERNAME'], password: propertiesData['NEXUS_PASSWORD'])
         }
 
         pom.project{
@@ -111,7 +116,7 @@ uploadArchives {
             developers{
                 developer{
                     id '10Darts'
-                    name 'Jorge Arimany'
+                    name '10Darts'
                 }
             }
             scm {

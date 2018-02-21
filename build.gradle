@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 ext {
     PUBLISH_GROUP_ID = 'com.10darts'
     PUBLISH_ARTIFACT_ID = 'sdk'
-    PUBLISH_VERSION = '1.23'
+    PUBLISH_VERSION = '1.25.1'
 
 
     bintrayRepo = '10darts'
@@ -21,8 +21,8 @@ ext {
     libraryVersion = PUBLISH_VERSION
 
     developerId = '10Darts'
-    developerName = 'Jorge Arimany'
-    developerEmail = 'jorge@onpublico.com'
+    developerName = '10Darts'
+    developerEmail = 'marcos@10darts.com'
 
     licenseName = 'MIT License'
     licenseUrl = 'https://github.com/onpublico/android-sdk/blob/master/license.txt'
