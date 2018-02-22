@@ -23,6 +23,13 @@ def propertiesFile = rootProject.file('sdk/credentials.properties')
 def propertiesData = new Properties()
 propertiesData.load(new FileInputStream(propertiesFile))
 
+ext."bintray.user"=propertiesData['bintray.user']
+ext."bintray.apikey"=propertiesData['bintray.apikey']
+ext."bintray.gpg.password"=propertiesData['bintray.gpg.password']
+
+ext."signing.keyId"=propertiesData['signing.keyId']
+ext."signing.password"=propertiesData['signing.password']
+ext."signing.secretKeyRingFile"=propertiesData['signing.secretKeyRingFile']
 
 task androidJavadocs(type: Javadoc) {
     failOnError = false
@@ -43,6 +50,7 @@ task androidSourcesJar(type: Jar) {
 
 
 uploadArchives {
+
     repositories.mavenDeployer {
         pom.groupId = groupId
         pom.artifactId = artifactId
@@ -116,7 +124,7 @@ uploadArchives {
             developers{
                 developer{
                     id '10Darts'
-                    name '10Darts'
+                    name 'Jorge Arimany'
                 }
             }
             scm {
