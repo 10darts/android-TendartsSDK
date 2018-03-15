@@ -5,6 +5,7 @@ import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.util.Log;
 
+import com.tendarts.sdk.BuildConfig;
 import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.client.TendartsClient;
 
@@ -176,6 +177,7 @@ public class PushController
 				object.put("version",version);
 				object.put("push_status", diagnostics );
 				object.put("model", model);
+				object.put("sdk", BuildConfig.VERSION_NAME);
 				object.put("source",Configuration.instance(context).getInstallSource());
 				PendingCommunicationController.addPendingTokenInfo(object, context);
 				if( lang != null)
