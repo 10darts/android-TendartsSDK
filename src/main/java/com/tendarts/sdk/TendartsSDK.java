@@ -1607,5 +1607,6 @@ public class TendartsSDK
 	}
 
 
+	// TODO: luisma: add methods to associate key-value to device
 
 }
