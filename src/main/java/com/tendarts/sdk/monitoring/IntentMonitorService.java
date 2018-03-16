@@ -108,16 +108,16 @@ public class IntentMonitorService extends IntentService
 			final JSONObject object = new JSONObject();
 			try
 			{
-				object.put("push",String.format(Constants.push, id));
+				object.put("push",String.format(Constants.PUSH, id));
 				object.put("device",Util.getFullDeviceUrl(getApplicationContext()));
-				object.put("kind", Constants.sessionEvent );
+				object.put("kind", Constants.SESSION_EVENT );
 				object.put("value", Math.ceil(elapsed/1000.0));
 			} catch (JSONException e)
 			{
 				e.printStackTrace();
 			}
 			Log.d(TAG, "json: "+object.toString());
-			Communications.postData(Constants.events, Util.getProvider(), 0, new ICommunicationObserver()
+			Communications.postData(Constants.EVENTS, Util.getProvider(), 0, new ICommunicationObserver()
 			{
 				@Override
 				public void onSuccess(int operationId, JSONObject data)

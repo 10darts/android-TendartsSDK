@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.tendarts.sdk.BuildConfig;
+import com.tendarts.sdk.common.Configuration;
 import com.tendarts.sdk.common.Constants;
 import com.tendarts.sdk.common.Util;
 import com.tendarts.sdk.communications.Communications;
@@ -44,12 +45,12 @@ public class TDKeysHandler {
 
     }
 
-    public void associateKeyValueWithDevice(final Context context,
-                                            final String key, KeyValueKind kind, final String value,
-                                            final TDKeysHandlerInterface listener) {
+    public static void associateKeyValueWithDevice(final Context context,
+                                                   final String key, KeyValueKind kind, final String value,
+                                                   final TDKeysHandlerInterface listener) {
 
-        if (key == null || value == null) {
-            TendartsClient.instance(context).logEvent("KEYS", "keys send error", "Set keys, a type and a value");
+        if (key == null) {
+            TendartsClient.instance(context).logEvent("KEYS", "keys send error", "Set key");
         }
 
         String device = Util.getFullDeviceUrl(context);
@@ -62,7 +63,9 @@ public class TDKeysHandler {
             JSONObject paramsJson = new JSONObject();
             paramsJson.put("key", keyJson);
             paramsJson.put("kind", kind.getKindValue());
-            paramsJson.put("value", value);
+            if (value != null) {
+                paramsJson.put("value", value);
+            }
             paramsJson.put("device", device);
 
             data = paramsJson.toString();
@@ -72,6 +75,10 @@ public class TDKeysHandler {
                 Log.d(LOG_TAG, e.getLocalizedMessage());
             }
             e.printStackTrace();
+
+            if (listener != null) {
+                listener.onError(e.getLocalizedMessage());
+            }
         }
 
         if (data != null) {
@@ -80,16 +87,11 @@ public class TDKeysHandler {
                 Log.d(LOG_TAG, "Associate key-value with device: " + data);
             }
 
-            ICommunicationObserver observer = new ICommunicationObserver() {
+            Communications.postData(Constants.KEYS_DEVICES, Util.getProvider(), 0, new ICommunicationObserver() {
                 @Override
-                public void onSuccess(int operationId, JSONObject data)
-                {
-                    handleSuccess(data);
-                }
+                public void onSuccess(int operationId, JSONObject data) {
 
-                private void handleSuccess(JSONObject data) {
-
-                    String message = "Successfully sent key-value " + key + "-" + value;
+                    String message = "Successfully sent key-value: " + key + "-" + value;
 
                     TendartsClient.instance(context).logEvent("KEYS", "keyDevice", message);
 
@@ -102,7 +104,7 @@ public class TDKeysHandler {
                 }
 
                 @Override
-                public void onFail(int operationId, String reason, Communications.PendingCommunication pc) {
+                public void onFail(int operationId, String reason, Communications.PendingCommunication pending) {
 
                     Util.checkUnauthorized(reason, context);
 
@@ -117,12 +119,99 @@ public class TDKeysHandler {
                     }
 
                 }
-            };
-
-            Communications.postData(Constants.devices, Util.getProvider(), 0, observer, data);
+            }, data);
 
         }
 
     }
+
+    public static void associateKeyValueWithUser(final Context context,
+                                                 final String key, KeyValueKind kind, final String value,
+                                                 final TDKeysHandlerInterface listener) {
+
+        if (key == null) {
+            TendartsClient.instance(context).logEvent("KEYS", "keys send error", "Set key");
+        }
+
+        String user = Configuration.instance(context).getUserCode();
+        if( user == null ) {
+            if (listener != null) {
+                listener.onError("The user should be already registered");
+            }
+            return;
+        }
+
+
+        String data = null;
+
+        try {
+            JSONObject keyJson = new JSONObject();
+            keyJson.put("label", key);
+
+            JSONObject paramsJson = new JSONObject();
+            paramsJson.put("key", keyJson);
+            paramsJson.put("kind", kind.getKindValue());
+            if (value != null) {
+                paramsJson.put("value", value);
+            }
+            paramsJson.put("persona", user);
+
+            data = paramsJson.toString();
+
+        } catch (JSONException e) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LOG_TAG, e.getLocalizedMessage());
+            }
+            e.printStackTrace();
+
+            if (listener != null) {
+                listener.onError(e.getLocalizedMessage());
+            }
+        }
+
+        if (data != null) {
+
+            if (BuildConfig.DEBUG) {
+                Log.d(LOG_TAG, "Associate key-value with user: " + data);
+            }
+
+            Communications.postData(Constants.KEYS_PERSONAS, Util.getProvider(), 0, new ICommunicationObserver() {
+                @Override
+                public void onSuccess(int operationId, JSONObject data) {
+
+                    String message = "Successfully sent key-value: " + key + "-" + value;
+
+                    TendartsClient.instance(context).logEvent("KEYS", "keyUser", message);
+
+                    Log.i(LOG_TAG, message);
+
+                    if (listener != null) {
+                        listener.onSuccess();
+                    }
+
+                }
+
+                @Override
+                public void onFail(int operationId, String reason, Communications.PendingCommunication pending) {
+
+                    Util.checkUnauthorized(reason, context);
+
+                    String message = String.format("Error sending key-value: %s-%s. Reason: %s", key, value, reason);
+
+                    TendartsClient.instance(context).logEvent("KEYS", "keyUser", message);
+
+                    Log.e(LOG_TAG, message);
+
+                    if (listener != null) {
+                        listener.onError(reason);
+                    }
+
+                }
+            }, data);
+
+        }
+
+    }
+
 
 }

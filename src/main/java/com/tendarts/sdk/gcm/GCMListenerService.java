@@ -195,7 +195,7 @@ public class GCMListenerService extends GcmListenerService
 						final Context finalContext = context;
 
 						Communications.patchData(
-								String.format(Constants.pushReceived,
+								String.format(Constants.PUSH_RECEIVED,
 										id
 										),
 								Util.getProvider(), 0, new ICommunicationObserver()

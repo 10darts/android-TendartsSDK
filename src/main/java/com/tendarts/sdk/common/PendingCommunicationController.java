@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
@@ -455,11 +454,11 @@ public class PendingCommunicationController
 
 			final JSONObject object = new JSONObject();
 			object.put("client_data",pendingLink);
-			String deviceId = String.format( Constants.deviceReference,code);
+			String deviceId = String.format( Constants.DEVICE_REFERENCE,code);
 
 			object.put("device",deviceId );
 
-			Communications.postData(Constants.links, Util.getProvider(), 0, new ICommunicationObserver()
+			Communications.postData(Constants.LINKS, Util.getProvider(), 0, new ICommunicationObserver()
 			{
 				@Override
 				public void onSuccess(int operationId, JSONObject data)

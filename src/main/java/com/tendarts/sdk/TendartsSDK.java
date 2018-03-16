@@ -14,21 +14,21 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.tendarts.sdk.Model.PersistentPush;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.tendarts.sdk.Model.Notification;
+import com.tendarts.sdk.Model.PersistentPush;
+import com.tendarts.sdk.client.TDKeysHandler;
+import com.tendarts.sdk.client.TendartsClient;
+import com.tendarts.sdk.common.Configuration;
+import com.tendarts.sdk.common.Constants;
 import com.tendarts.sdk.common.PendingCommunicationController;
+import com.tendarts.sdk.common.PushController;
 import com.tendarts.sdk.common.Util;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
 import com.tendarts.sdk.communications.PendingCommunicationsService;
 import com.tendarts.sdk.gcm.GCMListenerService;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-
-import com.tendarts.sdk.client.TendartsClient;
-import com.tendarts.sdk.common.Configuration;
-import com.tendarts.sdk.common.Constants;
-import com.tendarts.sdk.common.PushController;
 import com.tendarts.sdk.gcm.GCMRegistrationIntentService;
 import com.tendarts.sdk.geo.GoogleUpdates;
 
@@ -530,7 +530,7 @@ public class TendartsSDK
 			accessSent = true;
 			try
 			{
-				Communications.postData(String.format( Constants.deviceAccess,
+				Communications.postData(String.format( Constants.DEVICE_ACCESS,
 						Configuration.instance(context).getPushCode()),Util.getProvider(),  0, new ICommunicationObserver()
 				{
 					@Override
@@ -872,7 +872,7 @@ public class TendartsSDK
 		}
 		String json = Util.getDeviceJson(context);
 
-		String url = String.format(Constants.pushRead, notificationCode);
+		String url = String.format(Constants.PUSH_READ, notificationCode);
 		Log.d("NET", "sending pchd: "+url+"\n"+json);
 		Communications.patchData(url,
 				Util.getProvider(), 0, new ICommunicationObserver()
@@ -912,7 +912,7 @@ public class TendartsSDK
 
 		String json = Util.getDeviceJson(context);
 		Log.d("NET", "sending pchd: "+json);
-		Communications.patchData(Constants.pushAllRead,
+		Communications.patchData(Constants.PUSH_ALL_READ,
 				Util.getProvider(), 0, new ICommunicationObserver()
 				{
 					@Override
@@ -1161,7 +1161,7 @@ public class TendartsSDK
 			}
 
 			Log.d("net", "PtcD: "+object);
-			Communications.patchData(String.format( Constants.device,token),
+			Communications.patchData(String.format( Constants.DEVICE,token),
 					Util.getProvider(), 0, new ICommunicationObserver()
 			{
 				@Override
@@ -1219,7 +1219,7 @@ public class TendartsSDK
 
 		String json = Util.getDeviceJson(context);
 
-		String url = String.format(Constants.pushClicked, notificationCode);
+		String url = String.format(Constants.PUSH_CLICKED, notificationCode);
 		Log.d("NET", "sending pchd: "+url+"\n"+json);
 		Communications.patchData(url,
 				Util.getProvider(), 0, new ICommunicationObserver()
@@ -1288,11 +1288,11 @@ public class TendartsSDK
 
 			final JSONObject object = new JSONObject();
 			object.put("client_data",userIdentifier);
-			String deviceId = String.format( Constants.deviceReference,Configuration.instance(context).getPushCode());
+			String deviceId = String.format( Constants.DEVICE_REFERENCE,Configuration.instance(context).getPushCode());
 
 			object.put("device",deviceId );
 
-			Communications.postData(Constants.links, Util.getProvider(), 0, new ICommunicationObserver()
+			Communications.postData(Constants.LINKS, Util.getProvider(), 0, new ICommunicationObserver()
 			{
 				@Override
 				public void onSuccess(int operationId, JSONObject data)
@@ -1379,7 +1379,7 @@ public class TendartsSDK
 			try
 			{
 
-				object.put("persona",user);//String.format(Constants.relativeUser, user));
+				object.put("persona",user);//String.format(Constants.RELATIVE_USER, USER));
 				Communications.addGeoData(object);
 
 			}
@@ -1388,7 +1388,7 @@ public class TendartsSDK
 				e.printStackTrace();
 			}
 			Log.d("net", "PtcD: "+object);
-			Communications.patchData(String.format( Constants.device,token),
+			Communications.patchData(String.format( Constants.DEVICE,token),
 					Util.getProvider(), 0, new ICommunicationObserver()
 			{
 				@Override
@@ -1469,7 +1469,7 @@ public class TendartsSDK
 			e.printStackTrace();
 		}
 		Log.d("USR", "sending registration: "+object);
-		Communications.postData(Constants.registerUser,
+		Communications.postData(Constants.REGISTER_USER,
 				Util.getProvider(), 0, new ICommunicationObserver()
 		{
 			@Override
@@ -1548,7 +1548,7 @@ public class TendartsSDK
 		}
 		//todo: asignar errores numericos a toda la casuistica
 
-		String url = Configuration.instance(context).getUserCode();//String.format(Constants.user,);
+		String url = Configuration.instance(context).getUserCode();//String.format(Constants.USER,);
 
 		final JSONObject object = new JSONObject();
 		try
@@ -1594,6 +1594,66 @@ public class TendartsSDK
 	}
 
 	/**
+	 * Associates Key-Value with device
+	 * @param context
+	 * @param key
+	 * @param kind
+	 * @param value
+	 * @param observer
+	 */
+	public static void associateKeyValueWithDevice(Context context,
+					String key, TDKeysHandler.KeyValueKind kind, String value,
+					final IResponseObserver observer) {
+
+		TDKeysHandler.associateKeyValueWithDevice(context, key, kind, value, new TDKeysHandler.TDKeysHandlerInterface() {
+			@Override
+			public void onSuccess() {
+				if (observer != null) {
+					observer.onOk();
+				}
+			}
+
+			@Override
+			public void onError(String reason) {
+				if (observer != null) {
+					observer.onFail(reason);
+				}
+			}
+		});
+
+	}
+
+	/**
+	 * Associates Key-Value with user
+	 * @param context
+	 * @param key
+	 * @param kind
+	 * @param value
+	 * @param observer
+	 */
+	public static void associateKeyValueWithUser(Context context,
+												   String key, TDKeysHandler.KeyValueKind kind, String value,
+												   final IResponseObserver observer) {
+
+		TDKeysHandler.associateKeyValueWithUser(context, key, kind, value, new TDKeysHandler.TDKeysHandlerInterface() {
+			@Override
+			public void onSuccess() {
+				if (observer != null) {
+					observer.onOk();
+				}
+			}
+
+			@Override
+			public void onError(String reason) {
+				if (observer != null) {
+					observer.onFail(reason);
+				}
+			}
+		});
+
+	}
+
+	/**
 	 * Location alerter to redirect user to configuration
 	 */
 	public interface ILocationAlerter
@@ -1605,8 +1665,5 @@ public class TendartsSDK
 		 */
 		void alertNotEnabled(Activity parent);
 	}
-
-
-	// TODO: luisma: add methods to associate key-value to device
 
 }

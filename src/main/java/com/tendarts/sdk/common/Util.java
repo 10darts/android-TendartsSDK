@@ -182,13 +182,13 @@ public class Util
 
 	public static String getFullDeviceUrl (Context context )
 	{
-		return String.format( Constants.device,Configuration.instance(context).getPushCode());
+		return String.format( Constants.DEVICE,Configuration.instance(context).getPushCode());
 
 	}
 
 	public static String getDeviceJson(Context context)
 	{
-		String deviceId = String.format( Constants.deviceReference,Configuration.instance(context).getPushCode());
+		String deviceId = String.format( Constants.DEVICE_REFERENCE,Configuration.instance(context).getPushCode());
 		String json = null;
 		try
 		{
@@ -243,7 +243,7 @@ public class Util
 				@Override
 				public String getGeostatsUrlFormat()
 				{
-					return Constants.geostats;
+					return Constants.GEOSTATS;
 				}
 
 				@Override

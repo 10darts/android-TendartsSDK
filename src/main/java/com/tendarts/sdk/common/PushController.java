@@ -255,7 +255,7 @@ public class PushController
 					Util.checkUnauthorized(reason, context);
 					if (reason != null && reason.contains("400") && code != null)
 					{
-						Communications.patchData(String.format(Constants.device, code),
+						Communications.patchData(String.format(Constants.DEVICE, code),
 								Util.getProvider(), 0,
 								new ICommunicationObserver()
 								{
@@ -290,13 +290,13 @@ public class PushController
 			};
 			if( code != null)
 			{
-				Communications.patchData(String.format(Constants.device, code), Util.getProvider(),
+				Communications.patchData(String.format(Constants.DEVICE, code), Util.getProvider(),
 						0, observer, data,
 						false);
 			}
 			else
 			{
-				Communications.postData(Constants.devices, Util.getProvider(), 0, observer, data);
+				Communications.postData(Constants.DEVICES, Util.getProvider(), 0, observer, data);
 			}
 		}
 	}
