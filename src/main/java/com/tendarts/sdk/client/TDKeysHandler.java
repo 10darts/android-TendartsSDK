@@ -1,6 +1,8 @@
 package com.tendarts.sdk.client;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.tendarts.sdk.BuildConfig;
@@ -45,13 +47,11 @@ public class TDKeysHandler {
 
     }
 
-    public static void associateKeyValueWithDevice(final Context context,
-                                                   final String key, KeyValueKind kind, final String value,
-                                                   final TDKeysHandlerInterface listener) {
-
-        if (key == null) {
-            TendartsClient.instance(context).logEvent("KEYS", "keys send error", "Set key");
-        }
+    public static void associateKeyValueWithDevice(@NonNull final Context context,
+                                                   @NonNull final String key,
+                                                   @Nullable KeyValueKind kind,
+                                                   @Nullable final String value,
+                                                   @Nullable final TDKeysHandlerInterface listener) {
 
         String device = Util.getFullDeviceUrl(context);
         String data = null;
@@ -62,7 +62,9 @@ public class TDKeysHandler {
 
             JSONObject paramsJson = new JSONObject();
             paramsJson.put("key", keyJson);
-            paramsJson.put("kind", kind.getKindValue());
+            if (kind != null) {
+                paramsJson.put("kind", kind.getKindValue());
+            }
             if (value != null) {
                 paramsJson.put("value", value);
             }
@@ -125,13 +127,11 @@ public class TDKeysHandler {
 
     }
 
-    public static void associateKeyValueWithUser(final Context context,
-                                                 final String key, KeyValueKind kind, final String value,
-                                                 final TDKeysHandlerInterface listener) {
-
-        if (key == null) {
-            TendartsClient.instance(context).logEvent("KEYS", "keys send error", "Set key");
-        }
+    public static void associateKeyValueWithUser(@NonNull final Context context,
+                                                 @NonNull final String key,
+                                                 @Nullable KeyValueKind kind,
+                                                 @Nullable final String value,
+                                                 @Nullable final TDKeysHandlerInterface listener) {
 
         String user = Configuration.instance(context).getUserCode();
         if( user == null ) {
@@ -150,7 +150,9 @@ public class TDKeysHandler {
 
             JSONObject paramsJson = new JSONObject();
             paramsJson.put("key", keyJson);
-            paramsJson.put("kind", kind.getKindValue());
+            if (kind != null) {
+                paramsJson.put("kind", kind.getKindValue());
+            }
             if (value != null) {
                 paramsJson.put("value", value);
             }
@@ -212,6 +214,5 @@ public class TDKeysHandler {
         }
 
     }
-
 
 }

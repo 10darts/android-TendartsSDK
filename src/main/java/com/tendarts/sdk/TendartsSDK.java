@@ -12,6 +12,8 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -1601,9 +1603,11 @@ public class TendartsSDK
 	 * @param value
 	 * @param observer
 	 */
-	public static void associateKeyValueWithDevice(Context context,
-					String key, TDKeysHandler.KeyValueKind kind, String value,
-					final IResponseObserver observer) {
+	public static void associateKeyValueWithDevice(@NonNull Context context,
+												   @NonNull String key,
+												   @Nullable TDKeysHandler.KeyValueKind kind,
+												   @Nullable String value,
+												   @Nullable final IResponseObserver observer) {
 
 		TDKeysHandler.associateKeyValueWithDevice(context, key, kind, value, new TDKeysHandler.TDKeysHandlerInterface() {
 			@Override
@@ -1631,9 +1635,11 @@ public class TendartsSDK
 	 * @param value
 	 * @param observer
 	 */
-	public static void associateKeyValueWithUser(Context context,
-												   String key, TDKeysHandler.KeyValueKind kind, String value,
-												   final IResponseObserver observer) {
+	public static void associateKeyValueWithUser(@NonNull Context context,
+												 @NonNull String key,
+												 @Nullable TDKeysHandler.KeyValueKind kind,
+												 @Nullable String value,
+												 @Nullable final IResponseObserver observer) {
 
 		TDKeysHandler.associateKeyValueWithUser(context, key, kind, value, new TDKeysHandler.TDKeysHandlerInterface() {
 			@Override
