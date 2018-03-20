@@ -12,6 +12,7 @@ import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.common.Configuration;
+import com.tendarts.sdk.gcm.DartsReceiver;
 
 import java.security.InvalidParameterException;
 
@@ -126,7 +127,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 			String action = intent.getAction();
 
 
-			if ("com.darts.sdk.CLEAR_PUSHES".equalsIgnoreCase(action))
+			if (DartsReceiver.CLEAR_PUSHES.equalsIgnoreCase(action))
 			{
 
 				PersistentPush.clear(context);

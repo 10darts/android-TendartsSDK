@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,6 +31,7 @@ import com.tendarts.sdk.common.Util;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
 import com.tendarts.sdk.communications.PendingCommunicationsService;
+import com.tendarts.sdk.gcm.DartsReceiver;
 import com.tendarts.sdk.gcm.GCMListenerService;
 import com.tendarts.sdk.gcm.GCMRegistrationIntentService;
 import com.tendarts.sdk.geo.GoogleUpdates;
@@ -773,6 +775,7 @@ public class TendartsSDK
 
 		PendingCommunicationsService.startPendingCommunications(activity.getApplicationContext());
 
+		registerDartsReceiver(activity.getApplicationContext());
 
 	}//onCreate
 
@@ -1670,6 +1673,17 @@ public class TendartsSDK
 		 * @param parent could be null.
 		 */
 		void alertNotEnabled(Activity parent);
+	}
+
+	private static void registerDartsReceiver(Context context) {
+
+		DartsReceiver dartsReceiver = new DartsReceiver();
+
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(DartsReceiver.CLEAR_PUSHES);
+		filter.addAction(DartsReceiver.OPEN_PUSH);
+		filter.addAction(DartsReceiver.OPEN_LIST);
+		context.registerReceiver(dartsReceiver, filter);
 	}
 
 }

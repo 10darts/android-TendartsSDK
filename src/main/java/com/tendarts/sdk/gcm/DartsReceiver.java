@@ -8,20 +8,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
-
-import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.Model.Notification;
+import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
-import com.tendarts.sdk.common.Constants;
-import com.tendarts.sdk.common.Util;
-import com.tendarts.sdk.communications.Communications;
-import com.tendarts.sdk.communications.ICommunicationObserver;
 import com.tendarts.sdk.monitoring.IntentMonitorService;
-
-
-import org.json.JSONObject;
 
 /**
  * Created by jorgearimany on 19/4/17.
@@ -30,25 +22,23 @@ import org.json.JSONObject;
 public class DartsReceiver extends BroadcastReceiver
 {
 
-
 	private static final String TAG = "DartsReceiver";
+
+	public static final String CLEAR_PUSHES = "com.darts.sdk.CLEAR_PUSHES";
+	public static final String OPEN_PUSH = "com.darts.sdk.OPEN_PUSH";
+	public static final String OPEN_LIST = "com.darts.sdk.OPEN_LIST";
 
 	static Thread thread;
 
 	@Override
-	public void onReceive(final Context context, final Intent intent)
-	{
+	public void onReceive(final Context context, final Intent intent)  {
 
-
-		if(intent!=null){
-
-
+		if(intent != null) {
 
 			String action = intent.getAction();
 
 			Bundle extras = intent.getExtras();
-			if( extras == null|| !extras.containsKey("sorg") )
-			{
+			if( extras == null || !extras.containsKey("sorg")) {
 				Log.e(TAG, "onReceive: no extras");
 				return;
 			}
@@ -68,7 +58,7 @@ public class DartsReceiver extends BroadcastReceiver
 				return;
 			}
 
-			if( "com.darts.sdk.CLEAR_PUSHES".equalsIgnoreCase(action))
+			if( CLEAR_PUSHES.equalsIgnoreCase(action))
 			{
 
 				PersistentPush.clear(context);
@@ -86,7 +76,7 @@ public class DartsReceiver extends BroadcastReceiver
 
 				return;
 			}
-			else if ("com.darts.sdk.OPEN_PUSH".equalsIgnoreCase(action))
+			else if (OPEN_PUSH.equalsIgnoreCase(action))
 			{
 				//open push
 				if( Notification.canDeserialize(intent))
@@ -142,14 +132,12 @@ public class DartsReceiver extends BroadcastReceiver
 					Log.d(TAG, "onReceive: can't deserialize");
 				}
 			}
-			else if("com.darts.sdk.OPEN_LIST".equalsIgnoreCase(action))
+			else if(OPEN_LIST.equalsIgnoreCase(action))
 			{
 				dismissNotificationIfNeeded(context, intent);
 
 				TendartsClient.instance(context).openNotificationList(context);
 			}
-
-
 
 		}
 	}

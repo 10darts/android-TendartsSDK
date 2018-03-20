@@ -9,6 +9,7 @@ import android.util.Log;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
 import com.tendarts.sdk.common.PushController;
+import com.tendarts.sdk.gcm.DartsReceiver;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -152,7 +153,7 @@ public class PersistentPush
 			return null;
 		}
 
-		backIntent.setAction("com.darts.sdk.OPEN_PUSH");
+		backIntent.setAction(DartsReceiver.OPEN_PUSH);
 		// backIntent.putExtra("dismiss", not_id);
 		backIntent.putExtra("sorg",accessToken.hashCode());
 		push.serializeToExtras(backIntent);
