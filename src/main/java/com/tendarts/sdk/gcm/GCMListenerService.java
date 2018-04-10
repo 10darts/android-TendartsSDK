@@ -33,6 +33,7 @@ import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
 import com.tendarts.sdk.communications.IImageDownloadObserver;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -48,7 +49,7 @@ public class GCMListenerService extends GcmListenerService
 	private static final String TAG = "GCM Listener";
 	public static int not_id = PushController.NOTIFICATION_ID;
 	private static final String DEFAULT_CHANNEL_ID = "default_channel_id";
-	private static int PENDING_INTENT_REQUEST_CODE = 12345;
+	private static final int PENDING_INTENT_REQUEST_CODE = 12345;
 
 	//todo cambiar single_id por id push cuando no stacked
 	static Push.IImageUrlObserver _imageObserver;
@@ -67,7 +68,7 @@ public class GCMListenerService extends GcmListenerService
 		Util.printExtras(TAG, data);
 
 
-		if (Configuration.getAccessToken(context)== null) {
+		if (Configuration.getAccessToken(context) == null) {
 			android.util.Log.d(TAG, "onMessageReceived: sdk not configured");
 			return;
 		}
@@ -78,25 +79,20 @@ public class GCMListenerService extends GcmListenerService
 
 			try {
 
-
 				//----- check metadata
 				final String id = extras.getString("id");
 				String str = extras.getString("cfm");
 
 				int report =  0;
 
-				if( "1".equalsIgnoreCase(str))
-				{
+				if( "1".equalsIgnoreCase(str)) {
 					report = 1;
-				}
-				else
-				{
+				} else {
 					report = extras.getInt("cfm");
 				}
 
 				String origin = extras.getString("org");
-				if( !"10d".equals(origin))
-				{
+				if (!"10d".equals(origin)) {
 					TendartsClient.instance(getApplicationContext()).remoteLogException(
 							new Exception("invalid origin received: "+origin));
 					return;
@@ -229,7 +225,7 @@ public class GCMListenerService extends GcmListenerService
 
 
 
-			postNotification( context, extras);
+			postNotification(context, extras);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -285,7 +281,7 @@ public class GCMListenerService extends GcmListenerService
 			final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
 
-			if( message == null || message.length() <1) {
+			if (message == null || message.length() <1) {
 				try {
 					Log.e(TAG, "null message...");
 
@@ -310,14 +306,11 @@ public class GCMListenerService extends GcmListenerService
 
 			if (title == null || title.length() < 1) {
 				int index = message.indexOf(":");
-				if( index >0 && index < message.length()-2)
-				{
+				if (index >0 && index < message.length()-2) {
 					title = message.substring(0,index+1);
 					message = message.substring(index+1);
 
-				}
-				else
-				{
+				} else {
 					//title = "Onpublico";
 				}
 			}
@@ -336,7 +329,7 @@ public class GCMListenerService extends GcmListenerService
 					&& ! showed)//always show latest
 			{
 				final PendingIntent pendingIntent = PersistentPush.buildPendingIntent(push, context, true);
-				if( pendingIntent == null) {
+				if (pendingIntent == null) {
 					try {
 						TendartsClient.instance(context).logEvent("Push","no_build_intent","" + push);
 						/*
@@ -398,27 +391,49 @@ public class GCMListenerService extends GcmListenerService
 					}
 				}
 
-				Intent actionIntent = new Intent(context, DartsReceiver.class);
-				actionIntent.setAction(DartsReceiver.NOTIFICATION_ACTION);
-				actionIntent.putExtra("action_command", "command");
-				String accessToken = Configuration.getAccessToken(context);
-				if (accessToken != null) {
-					actionIntent.putExtra("sorg", accessToken.hashCode());
-				}
-				PendingIntent pendingActionIntent = PendingIntent.getBroadcast(
-						context,
-						PENDING_INTENT_REQUEST_CODE,
-						actionIntent,
-						PendingIntent.FLAG_UPDATE_CURRENT
-				);
+				if (extras.containsKey("r")) {
+					// Add action
+					try {
 
-				// TODO: luisma: check if notifications has actions, parse and show them
-				NotificationCompat.Action action = new NotificationCompat.Action.Builder(
-						0,
-						"Previous",
-						pendingActionIntent)
-						.build();
-				builder.addAction(action);
+						String replyArrayString = extras.getString("r");
+						JSONArray jsonArray = new JSONArray(replyArrayString);
+						for (int i = 0; i < jsonArray.length(); i++) {
+							JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+							String id = jsonObject.getString("id");
+							String actionText = jsonObject.getString("t");
+							String actionCommand = jsonObject.getString("p");
+
+							Intent actionIntent = new Intent();
+							actionIntent.setAction(DartsReceiver.NOTIFICATION_ACTION);
+							actionIntent.putExtra(DartsReceiver.PARAM_ACTION_ID, id);
+							actionIntent.putExtra(DartsReceiver.PARAM_ACTION_COMMAND, actionCommand);
+							String accessToken = Configuration.getAccessToken(context);
+							if (accessToken != null) {
+								actionIntent.putExtra(DartsReceiver.PARAM_ORIGIN, accessToken.hashCode());
+							}
+							PendingIntent pendingActionIntent = PendingIntent.getBroadcast(
+									context,
+									PENDING_INTENT_REQUEST_CODE,
+									actionIntent,
+									PendingIntent.FLAG_CANCEL_CURRENT
+							);
+
+							NotificationCompat.Action action = new NotificationCompat.Action.Builder(
+									0,
+									actionText,
+									pendingActionIntent)
+									.build();
+							builder.addAction(action);
+
+							TendartsClient.instance(getApplicationContext(), getApplicationInfo())
+									.logEvent("Push","","Set up reply action: " + actionCommand);
+						}
+
+					} catch (Throwable tx) {
+						Log.e(TAG, "Couldn't read reply commands");
+					}
+				}
 
 				if (makeSound) {
 					builder
@@ -775,7 +790,7 @@ public class GCMListenerService extends GcmListenerService
 			if (pushes.size()< 1) {
 				return;
 			}
-			Intent backIntent = new Intent(context, DartsReceiver.class);
+			Intent backIntent = new Intent();
 
 			backIntent.setAction(DartsReceiver.OPEN_LIST);
 			backIntent.putExtra("dismiss", not_id);
@@ -784,7 +799,7 @@ public class GCMListenerService extends GcmListenerService
 				android.util.Log.d(TAG, "notifyList: not access token");
 				return;
 			}
-			backIntent.putExtra("sorg", accessToken.hashCode());
+			backIntent.putExtra(DartsReceiver.PARAM_ORIGIN, accessToken.hashCode());
 
 			//backIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
 
@@ -796,10 +811,10 @@ public class GCMListenerService extends GcmListenerService
 					PendingIntent.FLAG_UPDATE_CURRENT
 			);*/
 
-			Intent cancel = new Intent(context, DartsReceiver.class);
+			Intent cancel = new Intent();
 			cancel.setAction(DartsReceiver.CLEAR_PUSHES);
 			cancel.putExtra("dismiss", not_id);
-			cancel.putExtra("sorg", Configuration.getAccessToken(context).hashCode());
+			cancel.putExtra(DartsReceiver.PARAM_ORIGIN, Configuration.getAccessToken(context).hashCode());
 
 			PendingIntent pendingIntentCancel = PendingIntent.getBroadcast(context, PENDING_INTENT_REQUEST_CODE, cancel, PendingIntent.FLAG_UPDATE_CURRENT);
 

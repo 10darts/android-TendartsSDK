@@ -1,12 +1,15 @@
 package com.tendarts.sdk.gcm;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.TextureView;
 
 import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.Model.PersistentPush;
@@ -14,6 +17,8 @@ import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
 import com.tendarts.sdk.monitoring.IntentMonitorService;
+
+import java.util.Map;
 
 /**
  * Created by jorgearimany on 19/4/17.
@@ -28,6 +33,11 @@ public class DartsReceiver extends BroadcastReceiver {
 	public static final String OPEN_LIST = "com.darts.sdk.OPEN_LIST";
 	public static final String NOTIFICATION_ACTION = "com.darts.sdk.NOTIFICATION_ACTION";
 
+	public static final String PARAM_ORIGIN = "sorg";
+
+	public static final String PARAM_ACTION_ID = "PARAM_ACTION_ID";
+	public static final String PARAM_ACTION_COMMAND = "PARAM_ACTION_COMMAND";
+
 	static Thread thread;
 
 	@Override
@@ -38,13 +48,13 @@ public class DartsReceiver extends BroadcastReceiver {
 			String action = intent.getAction();
 
 			Bundle extras = intent.getExtras();
-			if( extras == null || !extras.containsKey("sorg")) {
+			if (extras == null || !extras.containsKey(PARAM_ORIGIN)) {
 				Log.e(TAG, "onReceive: no extras");
 				return;
 			}
 
 
-			int origin = extras.getInt("sorg");
+			int origin = extras.getInt(PARAM_ORIGIN);
 			Log.d(TAG, "onReceive:  origin: "+origin +" "+action);
 			String accessToken = Configuration.instance(context).getAccessToken(context);
 			if(accessToken == null) {
@@ -117,6 +127,29 @@ public class DartsReceiver extends BroadcastReceiver {
 				dismissNotificationIfNeeded(context, intent);
 
 				TendartsClient.instance(context).openNotificationList(context);
+
+			} else if (NOTIFICATION_ACTION.equalsIgnoreCase(action)) {
+				// Get command and call developer intent associated with it
+
+				// TODO: luisma: call API with the id of the action and the code.
+
+				String actionId = extras.getString(PARAM_ACTION_ID);
+				String actionCommand = extras.getString(PARAM_ACTION_COMMAND);
+
+				if (!TextUtils.isEmpty(actionId) && !TextUtils.isEmpty(actionCommand)) {
+					Map<String, String> replyActionsMap = Configuration.instance(context).getReplyActionsMap();
+					String intentAction = replyActionsMap.get(actionCommand);
+
+					if (!TextUtils.isEmpty(intentAction)) {
+						// Send intent
+						Intent actionIntent = new Intent();
+						actionIntent.setAction(intentAction);
+						actionIntent.putExtra(DartsReceiver.PARAM_ACTION_ID, actionId);
+						actionIntent.putExtra(DartsReceiver.PARAM_ACTION_COMMAND, actionCommand);
+						context.sendBroadcast(actionIntent);
+					}
+				}
+
 			}
 
 		}

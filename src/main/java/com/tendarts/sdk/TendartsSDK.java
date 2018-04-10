@@ -42,6 +42,7 @@ import java.lang.ref.WeakReference;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * DartsSDK class enables customization of the SDK
@@ -1683,7 +1684,24 @@ public class TendartsSDK
 		filter.addAction(DartsReceiver.CLEAR_PUSHES);
 		filter.addAction(DartsReceiver.OPEN_PUSH);
 		filter.addAction(DartsReceiver.OPEN_LIST);
+		filter.addAction(DartsReceiver.NOTIFICATION_ACTION);
 		context.registerReceiver(dartsReceiver, filter);
+	}
+
+	/**
+	 * Set up a map containing the pairs:
+	 * 	("Action to be filtered for your BroadcastReceiver", "Command of the push notification action")
+	 *
+	 * 	TenDarts will send to that BroadcastReceiver the event consisting on
+	 * 	receiving a push notification action tap
+	 *
+	 * @param context
+	 * @param map
+	 */
+	public static void setReplyActions(Context context, Map<String, String> map) {
+
+		Configuration.instance(context).setReplyActionsMap(map);
+
 	}
 
 }

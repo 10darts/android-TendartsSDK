@@ -14,6 +14,7 @@ import org.w3c.dom.Text;
 
 import java.lang.ref.WeakReference;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Created by jorgearimany on 3/4/17.
@@ -74,6 +75,8 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 
 	private String appId= null;
 	private boolean inSoftMode = false;
+
+	private Map<String, String> replyActionsMap;
 
 	static WeakReference<Context> _context = null;
 
@@ -962,6 +965,13 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 		return null;
 	}
 
+	public Map<String, String> getReplyActionsMap() {
+		return replyActionsMap;
+	}
+
+	public void setReplyActionsMap(Map<String, String> replyActionsMap) {
+		this.replyActionsMap = replyActionsMap;
+	}
 }
 
 
