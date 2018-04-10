@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 ext {
     PUBLISH_GROUP_ID = 'com.10darts'
     PUBLISH_ARTIFACT_ID = 'sdk'
-    PUBLISH_VERSION = '1.25.1'
+    PUBLISH_VERSION = '1.26'
 
 
     bintrayRepo = '10darts'
