@@ -444,20 +444,15 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 
 
 
-	public static String getAccessToken(Context context)
-	{
-		try
-		{
+	public static String getAccessToken(Context context) {
+		try {
 			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
 			Bundle bundle = ai.metaData;
 			String id = bundle.getString("sdk_accessToken");
-			if (id != null)
-			{
-				if( id. startsWith(DELAYED_PREFIX))
-				{
+			if (id != null) {
+				if( id. startsWith(DELAYED_PREFIX)) {
 					String app = id.substring(DELAYED_PREFIX.length());
-					if( app == null ||app.length()<1)
-					{
+					if (app == null ||app.length()<1) {
 						return null;
 					}
 					instance(context).appId = app;
@@ -467,16 +462,13 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 
 				}
 				String token = Configuration.instance(context).getAccessToken();
-				if (!id.equals(token))
-				{
+				if (!id.equals(token)) {
 					Configuration.instance(context).setAccessToken(id);
 				}
-			} else
-			{
+			} else {
 				id = Configuration.instance(context).getAccessToken();
 			}
-			if (id == null || id.length() < 1)
-			{
+			if (id == null || id.length() < 1) {
 
 					if( Configuration.instance(context).inSoftMode)
 					{
@@ -486,11 +478,9 @@ public class Configuration implements SharedPreferences.OnSharedPreferenceChange
 				Log.w(TAG, "Please add  tendarts_sdk_access_token:\"YOUR ACCESS TOKEN\" in manifestPlaceholders");
 			}
 			return id;
-		} catch (Exception e)
-		{
+		} catch (Exception e) {
 			Log.w(TAG, "Please add  tendarts_sdk_access_token:\"YOUR ACCESS TOKEN\" in manifestPlaceholders");
 			return null;
-
 		}
 	}
 

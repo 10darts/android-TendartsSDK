@@ -25,11 +25,9 @@ import java.util.Date;
 
 //todo: no quitar inmediatamente, marcar como leido
 
-public class PersistentPush
-{
+public class PersistentPush {
+
 	private static final String TAG = "Persistent Push";
-
-
 
 
 	static ArrayList<Notification> _list = new ArrayList<>();
@@ -40,24 +38,19 @@ public class PersistentPush
 	 * @param id
 	 * @param context
 	 */
-	public static void removeById(String id, Context context)
-	{
+	public static void removeById(String id, Context context) {
 
 		Log.i(TAG,"Remove id:"+id);
-		if( id == null || id.isEmpty())
-		{
+		if (id == null || id.isEmpty()) {
 			return;
 		}
 		getStored(context);
-		synchronized (_list)
-		{
-			for (int i = 0; i < _list.size(); i++)
-			{
+		synchronized (_list) {
+			for (int i = 0; i < _list.size(); i++) {
 				Notification push = _list.get(i);
 				String pid= push.getString("id");
 				Log.d(TAG,"checking id "+pid);
-				if( id.equals(pid))
-				{
+				if (id.equals(pid)) {
 					Log.d(TAG, "match, removing");
 					push.deleted = true; //_list.remove(i);
 					JSONArray toSave = saveToJson(_list);
@@ -69,13 +62,12 @@ public class PersistentPush
 	}
 
 
-	public static PendingIntent buildPendingIntent(Notification push, Context context, boolean single)
-	{
+	public static PendingIntent buildPendingIntent(Notification push, Context context, boolean single) {
 		return  buildPendingIntent( push,  context ,
 				Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK, single);
 	}
-	public static PendingIntent buildPendingIntent(Notification push, Context context, int flags, boolean single)
-	{
+
+	public static PendingIntent buildPendingIntent(Notification push, Context context, int flags, boolean single) {
 
 		Intent intent = buildIntent(push, context, flags);
 		if (intent == null) return null;
@@ -100,31 +92,22 @@ public class PersistentPush
 
 
 		return pendingIntent;
-
 	}
 
-	public static boolean isDestinationRootWindow(String  dst)
-	{
-		if (dst != null)
-		{
-			switch (dst)
-			{
-
-
+	public static boolean isDestinationRootWindow(String  dst) {
+		if (dst != null) {
+			switch (dst) {
 				case "hot":
 				case "tag":
 				case "trks":
 				case "trn":
 					return true;
 			}
-
 		}
 		return false;
 	}
-	public static boolean isDestinationRootWindow(Notification push)
-	{
-		if( push != null)
-		{
+	public static boolean isDestinationRootWindow(Notification push) {
+		if (push != null) {
 			String dst = push.getString("dst");
 			return isDestinationRootWindow(dst);
 		}
@@ -132,23 +115,18 @@ public class PersistentPush
 	}
 
 	@Nullable
-	public static Intent buildIntent(Notification push, Context context, int flags)
-	{
-
-
+	public static Intent buildIntent(Notification push, Context context, int flags) {
 		Intent intent = buildIntent(context, flags, push);
 		if (intent == null) return null;
 		return intent;
 	}
 
 	@Nullable
-	public static Intent buildIntent(Context context, int flags,Notification push)
-	{
+	public static Intent buildIntent(Context context, int flags,Notification push) {
 
 		Intent backIntent = new Intent();
 		String accessToken =  Configuration.instance(context).getAccessToken(context);
-		if( accessToken == null )
-		{
+		if (accessToken == null) {
 			android.util.Log.d(TAG, "notifyList: not access token");
 			return null;
 		}
@@ -165,14 +143,10 @@ public class PersistentPush
 
 	private final static String PUSH_KEY ="sdk_stored_pushes";
 
-	public static void addPush(Notification push, Context context)
-	{
+	public static void addPush(Notification push, Context context) {
 		//getStored(context);
-		synchronized (_list)
-		{
+		synchronized (_list) {
 			//ArrayList<Notification> list = getStored(context);
-
-
 
 				for (int i = 0; i < _list.size(); i++)
 				{
@@ -195,10 +169,9 @@ public class PersistentPush
 		}
 		save(context);
 	}
-	public static void save(Context context)
-	{
-		try
-		{
+
+	public static void save(Context context) {
+		try {
 			removeDeleted(context);
 			synchronized (_list)
 			{
@@ -207,21 +180,16 @@ public class PersistentPush
 				Log.d(TAG, "save: "+toSave);
 				Configuration.instance(context).savePrivate(PUSH_KEY, toSave.toString());
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void removeDeleted(Context context)
-	{
+	public static void removeDeleted(Context context) {
 
-		synchronized (_list)
-		{
+		synchronized (_list) {
 			ArrayList<Push> to_delete = new ArrayList<>();
-			for (int i = 0; i < _list.size(); i++)
-			{
+			for (int i = 0; i < _list.size(); i++) {
 
 				Notification p = _list.get(i);
 
@@ -236,38 +204,27 @@ public class PersistentPush
 			Log.d(TAG, "removeDeleted past 48 h"+to_delete);
 			_list.removeAll(to_delete);
 			//save ( context);
-
 		}
 	}
 
-	public static void clear(Context context)
-	{
+	public static void clear(Context context) {
 		getStored(context);
-		synchronized (_list)
-		{
-			for (int i = 0; i < _list.size(); i++)
-			{
+		synchronized (_list) {
+			for (int i = 0; i < _list.size(); i++) {
 				Notification p = _list.get(i);
 				p.deleted = true;
 			}
 		}
 		save(context);
-
 	}
 
-	public static ArrayList<Notification> getStored(Context context)
-	{
-		try
-		{
+	public static ArrayList<Notification> getStored(Context context) {
+		try {
 			String json = Configuration.instance(context).loadPrivate(PUSH_KEY);
-			if( json != null)
-			{
-				if( json.isEmpty())
-				{
+			if (json != null) {
+				if (json.isEmpty()) {
 					_list = new ArrayList<>();
-				}
-				else
-				{
+				} else {
 					JSONArray array = new JSONArray(json);
 					synchronized (_list)
 					{
@@ -276,8 +233,7 @@ public class PersistentPush
 				}
 
 				ArrayList<Notification> toReturn = new ArrayList<>();
-				for (int i = 0; i < _list.size(); i++)
-				{
+				for (int i = 0; i < _list.size(); i++) {
 
 					Notification p = _list.get(i);
 					if( !p.deleted)
@@ -288,45 +244,34 @@ public class PersistentPush
 				}
 					return toReturn;
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		_list = new ArrayList<>();
 		return _list;
 	}
 
-	private static JSONArray saveToJson(ArrayList<Notification> list)
-	{
+	private static JSONArray saveToJson(ArrayList<Notification> list) {
 		JSONArray array = new JSONArray();
-		for( Notification sp : list)
-		{
-			if( sp.message != null)
-			{
+		for(Notification sp : list) {
+			if(sp.message != null) {
 				array.put(sp.serialize());
 			}
 		}
-
 		return  array;
 	}
 
-	private static ArrayList<Notification> loadFromJson(JSONArray array)
-	{
+	private static ArrayList<Notification> loadFromJson(JSONArray array) {
 		ArrayList<Notification> list = new ArrayList<>();
-		try
-		{
+		try {
 
-			for (int i = 0; i < array.length(); i++)
-			{
+			for (int i = 0; i < array.length(); i++) {
 				JSONObject push = array.getJSONObject(i);
 				Notification storedPush = new Notification(null,null);
 				storedPush.deserialize(push);
 				list.add(storedPush);
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -342,48 +287,35 @@ public class PersistentPush
 		return list;
 	}
 
-	public static boolean alreadyContains(Notification push, Context context)
-	{
+	public static boolean alreadyContains(Notification push, Context context) {
 
-
-		for (int i = 0; i < _list.size(); i++)
-		{
+		for (int i = 0; i < _list.size(); i++) {
 			Notification p = _list.get(i);
 			String pid= p.getUID();
 			String id = push.getUID();
-			if( id != null &&  id.equals(pid))
-			{
+			if (id != null &&  id.equals(pid)) {
 				return	true;
 			}
 		}
-
 		return false;
 	}
 
-	public static String getAllIds(Context context)
-	{
+	public static String getAllIds(Context context) {
 
 		getStored(context);
 		StringBuilder builder = new StringBuilder("[");
-		synchronized (_list)
-		{
+		synchronized (_list) {
 
-
-
-
-			for (int i = 0; i < _list.size(); i++)
-			{
+			for (int i = 0; i < _list.size(); i++) {
 				Notification p = _list.get(i);
 				String pid= p.getCode();
 				builder.append(pid).append(", ");
 
 			}
 			builder.append("]");
-
-
 		}
-
 		return builder.toString();
 	}
+
 }
 

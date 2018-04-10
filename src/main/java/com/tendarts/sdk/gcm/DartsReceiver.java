@@ -19,21 +19,21 @@ import com.tendarts.sdk.monitoring.IntentMonitorService;
  * Created by jorgearimany on 19/4/17.
  */
 
-public class DartsReceiver extends BroadcastReceiver
-{
+public class DartsReceiver extends BroadcastReceiver {
 
 	private static final String TAG = "DartsReceiver";
 
 	public static final String CLEAR_PUSHES = "com.darts.sdk.CLEAR_PUSHES";
 	public static final String OPEN_PUSH = "com.darts.sdk.OPEN_PUSH";
 	public static final String OPEN_LIST = "com.darts.sdk.OPEN_LIST";
+	public static final String NOTIFICATION_ACTION = "com.darts.sdk.NOTIFICATION_ACTION";
 
 	static Thread thread;
 
 	@Override
 	public void onReceive(final Context context, final Intent intent)  {
 
-		if(intent != null) {
+		if (intent != null) {
 
 			String action = intent.getAction();
 
@@ -47,40 +47,31 @@ public class DartsReceiver extends BroadcastReceiver
 			int origin = extras.getInt("sorg");
 			Log.d(TAG, "onReceive:  origin: "+origin +" "+action);
 			String accessToken = Configuration.instance(context).getAccessToken(context);
-			if( accessToken == null)
-			{
+			if(accessToken == null) {
 				android.util.Log.d(TAG, "onReceive: not access token");
 				return;
 			}
-			if( origin != accessToken.hashCode() )
-			{
+			if (origin != accessToken.hashCode() ) {
 				Log.d(TAG, "onReceive:  not for me: "+origin+ "   " + accessToken.hashCode() );
 				return;
 			}
 
-			if( CLEAR_PUSHES.equalsIgnoreCase(action))
-			{
+			if(CLEAR_PUSHES.equalsIgnoreCase(action)) {
 
 				PersistentPush.clear(context);
 				TendartsClient.instance(context).onNotificationListCleared();
 				dismissNotificationIfNeeded(context, intent);
 
-				try
-				{
+				try {
 					TendartsClient.instance(context).logEvent("Push","clear list from push","");
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 				return;
-			}
-			else if (OPEN_PUSH.equalsIgnoreCase(action))
-			{
+			} else if (OPEN_PUSH.equalsIgnoreCase(action)) {
 				//open push
-				if( Notification.canDeserialize(intent))
-				{
+				if (Notification.canDeserialize(intent)) {
 
 					thread = new Thread(new Runnable()
 					{
@@ -93,13 +84,10 @@ public class DartsReceiver extends BroadcastReceiver
 							dismissNotificationIfNeeded(context,intent);
 							TendartsClient.instance(context).onNotificationClicked(push);
 							boolean opened =  TendartsClient.instance(context).openNotification(push, context);
-							if( ! opened)
-							{
+							if (!opened) {
 								String deepUrl = push.getDeepUrl();
-								if( deepUrl != null )
-								{
-									try
-									{
+								if (deepUrl != null) {
+									try {
 										Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepUrl.trim()));
 										viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 										context.startActivity(viewIntent);
@@ -108,17 +96,13 @@ public class DartsReceiver extends BroadcastReceiver
 										Intent service  = new Intent(context, IntentMonitorService.class);
 										service.setData(Uri.parse(push.getCode()));
 										context.startService(service);
-									}
-									catch (Exception e)
-									{
+									} catch (Exception e) {
 										e.printStackTrace();
 										TendartsClient.instance(context).logEvent("App","can't launch deep url",""+e.getMessage());
 										TendartsClient.instance(context).remoteLogException(e);
 									}
 								}
-							}
-							else
-							{
+							} else {
 								Log.d(TAG, "opened by client ");
 							}
 						}
@@ -126,14 +110,10 @@ public class DartsReceiver extends BroadcastReceiver
 					thread.start();
 
 
-				}
-				else
-				{
+				} else {
 					Log.d(TAG, "onReceive: can't deserialize");
 				}
-			}
-			else if(OPEN_LIST.equalsIgnoreCase(action))
-			{
+			} else if(OPEN_LIST.equalsIgnoreCase(action)) {
 				dismissNotificationIfNeeded(context, intent);
 
 				TendartsClient.instance(context).openNotificationList(context);
@@ -142,25 +122,18 @@ public class DartsReceiver extends BroadcastReceiver
 		}
 	}
 
-
-
-	private void dismissNotificationIfNeeded(Context context, Intent intent)
-	{
-		if( intent.hasExtra("dismiss"))
-		{
+	private void dismissNotificationIfNeeded(Context context, Intent intent) {
+		if (intent.hasExtra("dismiss")) {
 			int id = intent.getIntExtra("dismiss", -1);
-			if( id != -1)
-			{
+			if (id != -1) {
 				Log.d(TAG, "dismissNotificationIfNeeded: "+id);
 
 				NotificationManager manager =
 						(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 				manager.cancel(id);
 				//manager.cancel(GCMListenerService.not_id);
-
 			}
 		}
 	}
-
 
 }
