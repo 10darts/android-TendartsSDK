@@ -10,7 +10,7 @@ import android.net.ConnectivityManager;
 import android.util.Log;
 
 import com.tendarts.sdk.common.ConnectionManager;
-import com.tendarts.sdk.common.PendingCommunicationController;
+import com.tendarts.sdk.common.LogHelper;
 
 public class NetworkChangeReceiver extends BroadcastReceiver
 {
@@ -69,12 +69,10 @@ public class NetworkChangeReceiver extends BroadcastReceiver
 	}
 
 	@Override
-	public void onReceive(Context context, Intent intent)
-	{
+	public void onReceive(Context context, Intent intent) {
 
-		Log.d(TAG, "Network change received");
-		if(ConnectionManager.isConnected(context))
-		{
+		LogHelper.logConsole(TAG, "Network change received");
+		if (ConnectionManager.isConnected(context)) {
 			//if connected start pending updates and disable receiver
 			PendingCommunicationsService.startPendingCommunications(context);
 			disable(context);

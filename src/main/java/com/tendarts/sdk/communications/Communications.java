@@ -12,6 +12,8 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.tendarts.sdk.common.LogHelper;
+
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
@@ -334,7 +336,7 @@ public class Communications
 
 				addGeoData(obj);
 				String url = String.format(provider.getGeostatsUrlFormat(), code);
-				Log.d(TAG, "sendGeoStats: patch to " + url + "\n" + obj + enabled);
+				LogHelper.logConsole(TAG, "sendGeoStats: patch to " + url + "\n" + obj + enabled);
 				patchData(url, provider, 0, new ICommunicationObserver()
 				{
 					@Override
@@ -639,8 +641,7 @@ public class Communications
 					e.printStackTrace();
 				}
 
-
-				Log.d(TAG, "Geolocation:" + _geoHeader);
+				LogHelper.logConsole(TAG, "Geolocation:" + _geoHeader);
 			}
 
 
@@ -1051,16 +1052,14 @@ public class Communications
 						}
 
 						@Override
-						public void write(int idx) throws IOException
-						{
-							Log.d(TAG, "upload write idx ");
+						public void write(int idx) throws IOException {
+							LogHelper.logConsole(TAG, "upload write idx ");
 							out.write(idx);
 						}
 
 						@Override
-						public void write(byte[] bts) throws IOException
-						{
-							Log.d(TAG, "upload write bts " + bts.length);
+						public void write(byte[] bts) throws IOException {
+							LogHelper.logConsole(TAG, "upload write bts " + bts.length);
 							int count = bts.length >> 2;
 							count++;//testing
 							int start = 0;
@@ -1078,9 +1077,8 @@ public class Communications
 						}
 
 						@Override
-						public void write(byte[] bts, int offset, int length) throws IOException
-						{
-							Log.d(TAG, "upload write bts st end ");
+						public void write(byte[] bts, int offset, int length) throws IOException {
+							LogHelper.logConsole(TAG, "upload write bts st end ");
 							out.write(bts, offset, length);
 						}
 
@@ -1128,10 +1126,9 @@ public class Communications
 									lastDate = new Date();
 									//calculate percentage:
 									long length = count;
-									if (length > 0)
-									{
+									if (length > 0) {
 										float percentage = 100.0f * _count / length;
-										Log.d(TAG, "upload chunk: calling observer percentage " + percentage);
+										LogHelper.logConsole(TAG, "upload chunk: calling observer percentage " + percentage);
 										observer.onProgress(percentage);
 									}
 								} catch (Exception e)
@@ -1160,10 +1157,9 @@ public class Communications
 			request.removeHeaders("Content-range");
 			String range = String.format("bytes %d-%d/%d", start, end, total);
 			request.addHeader("Content-range", range);
-			Log.d(TAG, " upload postChunk: " + range);
+			LogHelper.logConsole(TAG, " upload postChunk: " + range);
 
-			if (uploadId != null)
-			{
+			if (uploadId != null) {
 				request.addHeader("upload_id", uploadId);
 			}
 
@@ -1185,9 +1181,8 @@ public class Communications
 					dataSent += count;
 					totalSent += response.getEntity().getContentLength() + RequestLength;
 
-					if (dataSent > 0)
-					{
-						Log.d(TAG, "upload statistics: S" + dataSent + " T" + totalSent + "overhead %" + ((100f * totalSent) / dataSent));
+					if (dataSent > 0) {
+						LogHelper.logConsole(TAG, "upload statistics: S" + dataSent + " T" + totalSent + "overhead %" + ((100f * totalSent) / dataSent));
 					}
 
 					String res = null;
@@ -1338,7 +1333,7 @@ public class Communications
 							res = EntityUtilsHC4.toString(response.getEntity(), "utf-8");
 							JSONObject object = new JSONObject(res);
 							result.json = object;
-							Log.d(TAG, "finishFile: " + object);
+							LogHelper.logConsole(TAG, "finishFile: " + object);
 							//if( res.contains(""))
 
 						} catch (Exception e)
@@ -2574,7 +2569,7 @@ String pass = userDetails.getString("password", "");
 		{
 			e.printStackTrace();
 		}
-		Log.d("GEO:", "addGeoData: " + object);
+		LogHelper.logConsole("GEO:", "addGeoData: " + object);
 	}
 
 	public static class PendingCommunication

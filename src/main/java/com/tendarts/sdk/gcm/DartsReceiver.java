@@ -1,7 +1,6 @@
 package com.tendarts.sdk.gcm;
 
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,14 +8,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.TextureView;
 
 import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
+import com.tendarts.sdk.common.Constants;
+import com.tendarts.sdk.common.LogHelper;
+import com.tendarts.sdk.common.PendingCommunicationController;
+import com.tendarts.sdk.common.Util;
+import com.tendarts.sdk.communications.Communications;
+import com.tendarts.sdk.communications.ICommunicationObserver;
 import com.tendarts.sdk.monitoring.IntentMonitorService;
+
+import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -35,8 +41,8 @@ public class DartsReceiver extends BroadcastReceiver {
 
 	public static final String PARAM_ORIGIN = "sorg";
 
-	public static final String PARAM_ACTION_ID = "PARAM_ACTION_ID";
-	public static final String PARAM_ACTION_COMMAND = "PARAM_ACTION_COMMAND";
+	public static final String PARAM_ACTION_ID = "action_id";
+	public static final String PARAM_ACTION_COMMAND = "action_command";
 
 	static Thread thread;
 
@@ -55,14 +61,14 @@ public class DartsReceiver extends BroadcastReceiver {
 
 
 			int origin = extras.getInt(PARAM_ORIGIN);
-			Log.d(TAG, "onReceive:  origin: "+origin +" "+action);
+			LogHelper.logConsole(TAG, "onReceive:  origin: " + origin + " " + action);
 			String accessToken = Configuration.instance(context).getAccessToken(context);
 			if(accessToken == null) {
-				android.util.Log.d(TAG, "onReceive: not access token");
+				LogHelper.logConsole(TAG,"onReceive: not access token");
 				return;
 			}
 			if (origin != accessToken.hashCode() ) {
-				Log.d(TAG, "onReceive:  not for me: "+origin+ "   " + accessToken.hashCode() );
+				LogHelper.logConsole(TAG,"onReceive:  not for me: " + origin + "   " + accessToken.hashCode() );
 				return;
 			}
 
@@ -72,13 +78,8 @@ public class DartsReceiver extends BroadcastReceiver {
 				TendartsClient.instance(context).onNotificationListCleared();
 				dismissNotificationIfNeeded(context, intent);
 
-				try {
-					TendartsClient.instance(context).logEvent("Push","clear list from push","");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				LogHelper.logEventPush(context, "onReceive","clear push list");
 
-				return;
 			} else if (OPEN_PUSH.equalsIgnoreCase(action)) {
 				//open push
 				if (Notification.canDeserialize(intent)) {
@@ -108,12 +109,12 @@ public class DartsReceiver extends BroadcastReceiver {
 										context.startService(service);
 									} catch (Exception e) {
 										e.printStackTrace();
-										TendartsClient.instance(context).logEvent("App","can't launch deep url",""+e.getMessage());
+										LogHelper.logEvent(context, "onReceive","can't launch deep url",""+e.getMessage());
 										TendartsClient.instance(context).remoteLogException(e);
 									}
 								}
 							} else {
-								Log.d(TAG, "opened by client ");
+								LogHelper.logConsole(TAG,"opened by client");
 							}
 						}
 					});
@@ -121,7 +122,7 @@ public class DartsReceiver extends BroadcastReceiver {
 
 
 				} else {
-					Log.d(TAG, "onReceive: can't deserialize");
+					LogHelper.logConsole(TAG,"onReceive: can't deserialize");
 				}
 			} else if(OPEN_LIST.equalsIgnoreCase(action)) {
 				dismissNotificationIfNeeded(context, intent);
@@ -131,12 +132,12 @@ public class DartsReceiver extends BroadcastReceiver {
 			} else if (NOTIFICATION_ACTION.equalsIgnoreCase(action)) {
 				// Get command and call developer intent associated with it
 
-				// TODO: luisma: call API with the id of the action and the code.
-
 				String actionId = extras.getString(PARAM_ACTION_ID);
 				String actionCommand = extras.getString(PARAM_ACTION_COMMAND);
 
-				if (!TextUtils.isEmpty(actionId) && !TextUtils.isEmpty(actionCommand)) {
+                notificationActionClicked(context, actionId);
+
+                if (!TextUtils.isEmpty(actionId) && !TextUtils.isEmpty(actionCommand)) {
 					Map<String, String> replyActionsMap = Configuration.instance(context).getReplyActionsMap();
 					String intentAction = replyActionsMap.get(actionCommand);
 
@@ -159,7 +160,7 @@ public class DartsReceiver extends BroadcastReceiver {
 		if (intent.hasExtra("dismiss")) {
 			int id = intent.getIntExtra("dismiss", -1);
 			if (id != -1) {
-				Log.d(TAG, "dismissNotificationIfNeeded: "+id);
+				LogHelper.logConsole(TAG,"dismissNotificationIfNeeded: "+id);
 
 				NotificationManager manager =
 						(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -168,5 +169,31 @@ public class DartsReceiver extends BroadcastReceiver {
 			}
 		}
 	}
+
+	private void notificationActionClicked(final Context context, String replyId) {
+
+        String deviceJson = Util.getDeviceJson(context);
+        String url = String.format(Constants.REPLIES_SELECTED, replyId);
+
+		LogHelper.logConsoleNet("sending post: " + url + "\n" + deviceJson);
+
+        Communications.postData(url, Util.getProvider(), 0, new ICommunicationObserver() {
+            @Override
+            public void onSuccess(int operationId, JSONObject data) {
+            	LogHelper.logEventPush(context,"Replies","Notified selected reply");
+				LogHelper.logConsole("Notified selected reply");
+            }
+
+            @Override
+            public void onFail(int operationId, String reason,
+                               Communications.PendingCommunication pending) {
+                Util.checkUnauthorized(reason,context);
+				PendingCommunicationController.addPending(pending, context);
+				LogHelper.logEventPush(context,"Replies","Notifying selected reply failed: " + reason);
+				LogHelper.logConsole("Notifying selected reply failed: " + reason);
+            }
+        }, deviceJson, false);
+
+    }
 
 }

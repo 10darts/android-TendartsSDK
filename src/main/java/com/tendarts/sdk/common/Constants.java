@@ -34,4 +34,6 @@ public class Constants extends ConstantsBase {
 	public static final String RELATIVE_USER = "/api/v1/personas/%s/";
 	public static final String LINKS = BASE_URL +"/api/v1/devices/links/";
 
+	public static final String REPLIES_SELECTED = BASE_URL + "/api/v1/replies/%s/selected/";
+
 }

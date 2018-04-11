@@ -6,6 +6,7 @@ import android.widget.RemoteViews;
 
 import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.TendartsSDK;
+import com.tendarts.sdk.common.LogHelper;
 
 /**
  * Created by jorgearimany on 8/4/17.
@@ -103,9 +104,8 @@ class TendartsClientDefaultImplementation extends TendartsClient
 	 * @param type type
 	 * @param message message
 	 */
-	public void logEvent(String category, String type, String message)
-	{
-		Log.d(TAG, "logEvent: c:"+category+" t:"+type+" m:"+message);
+	public void logEvent(String category, String type, String message) {
+		LogHelper.logConsole(TAG, "logEvent: c:"+category+" t:"+type+" m:"+message);
 	}
 
 

@@ -8,6 +8,7 @@ import android.util.Log;
 import com.tendarts.sdk.BuildConfig;
 import com.tendarts.sdk.common.Configuration;
 import com.tendarts.sdk.common.Constants;
+import com.tendarts.sdk.common.LogHelper;
 import com.tendarts.sdk.common.Util;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
@@ -73,9 +74,7 @@ public class TDKeysHandler {
             data = paramsJson.toString();
 
         } catch (JSONException e) {
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG_TAG, e.getLocalizedMessage());
-            }
+            LogHelper.logConsole(LOG_TAG, e.getLocalizedMessage());
             e.printStackTrace();
 
             if (listener != null) {
@@ -85,19 +84,15 @@ public class TDKeysHandler {
 
         if (data != null) {
 
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG_TAG, "Associate key-value with device: " + data);
-            }
+            LogHelper.logConsole(LOG_TAG, "Associate key-value with device: " + data);
 
             Communications.postData(Constants.KEYS_DEVICES, Util.getProvider(), 0, new ICommunicationObserver() {
                 @Override
                 public void onSuccess(int operationId, JSONObject data) {
 
                     String message = "Successfully sent key-value: " + key + "-" + value;
-
-                    TendartsClient.instance(context).logEvent("KEYS", "keyDevice", message);
-
-                    Log.i(LOG_TAG, message);
+                    LogHelper.logEventKeys(context,"keyDevice", message);
+                    LogHelper.logConsole(LOG_TAG, message);
 
                     if (listener != null) {
                         listener.onSuccess();
@@ -111,10 +106,8 @@ public class TDKeysHandler {
                     Util.checkUnauthorized(reason, context);
 
                     String message = String.format("Error sending key-value: %s-%s. Reason: %s", key, value, reason);
-
-                    TendartsClient.instance(context).logEvent("KEYS", "keyDevice", message);
-
-                    Log.e(LOG_TAG, message);
+                    LogHelper.logEventKeys(context,"keyDevice", message);
+                    LogHelper.logConsole(LOG_TAG, message);
 
                     if (listener != null) {
                         listener.onError(reason);
@@ -161,9 +154,7 @@ public class TDKeysHandler {
             data = paramsJson.toString();
 
         } catch (JSONException e) {
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG_TAG, e.getLocalizedMessage());
-            }
+            LogHelper.logConsole(LOG_TAG, e.getLocalizedMessage());
             e.printStackTrace();
 
             if (listener != null) {
@@ -173,19 +164,15 @@ public class TDKeysHandler {
 
         if (data != null) {
 
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG_TAG, "Associate key-value with user: " + data);
-            }
+            LogHelper.logConsole(LOG_TAG, "Associate key-value with user: " + data);
 
             Communications.postData(Constants.KEYS_PERSONAS, Util.getProvider(), 0, new ICommunicationObserver() {
                 @Override
                 public void onSuccess(int operationId, JSONObject data) {
 
                     String message = "Successfully sent key-value: " + key + "-" + value;
-
-                    TendartsClient.instance(context).logEvent("KEYS", "keyUser", message);
-
-                    Log.i(LOG_TAG, message);
+                    LogHelper.logEventKeys(context,"keyUser", message);
+                    LogHelper.logConsole(LOG_TAG, message);
 
                     if (listener != null) {
                         listener.onSuccess();
@@ -199,10 +186,8 @@ public class TDKeysHandler {
                     Util.checkUnauthorized(reason, context);
 
                     String message = String.format("Error sending key-value: %s-%s. Reason: %s", key, value, reason);
-
-                    TendartsClient.instance(context).logEvent("KEYS", "keyUser", message);
-
-                    Log.e(LOG_TAG, message);
+                    LogHelper.logEventKeys(context,"keyUser", message);
+                    LogHelper.logConsole(LOG_TAG, message);
 
                     if (listener != null) {
                         listener.onError(reason);

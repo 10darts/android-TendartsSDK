@@ -9,20 +9,15 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
-import com.tendarts.sdk.TendartsSDK;
-import com.tendarts.sdk.common.ConnectionManager;
+import com.tendarts.sdk.common.LogHelper;
 import com.tendarts.sdk.common.PendingCommunicationController;
-
-import java.util.Date;
 
 /**
  * Created by jorgearimany on 10/10/17.
  */
 
-public class PendingCommunicationsService extends IntentService
-{
+public class PendingCommunicationsService extends IntentService {
 
 	public static final String TAG = "PendingCommunicationsS";
 	private static String CONTINUE_PENDING_COMMUNICATIONS = "com.tendarts.sdk.CONTINUE_PENDING_COMMUNICATIONS";
@@ -57,11 +52,9 @@ public class PendingCommunicationsService extends IntentService
 	 *               for details.
 	 */
 	@Override
-	protected void onHandleIntent(@Nullable Intent intent)
-	{
-		Log.d(TAG, "onHandleIntent: ");
+	protected void onHandleIntent(@Nullable Intent intent) {
+		LogHelper.logConsole(TAG, "onHandleIntent: ");
 		PendingCommunicationController.doPending(getApplicationContext());
-
 	}
 	/**
 	 * This is called if the service is currently running and the user has
@@ -74,17 +67,15 @@ public class PendingCommunicationsService extends IntentService
 	 *                   the task that is being removed.
 	 */
 	@Override
-	public void onTaskRemoved(Intent rootIntent)
-	{
-		Log.d(TAG, "onTaskRemoved: scheduling");
+	public void onTaskRemoved(Intent rootIntent) {
+		LogHelper.logConsole(TAG, "onTaskRemoved: scheduling");
 		schedulePending(60000,getApplicationContext());
 
 
 		super.onTaskRemoved(rootIntent);
 	}
 
-	public static void schedulePending(long milliseconds, Context context)
-	{
+	public static void schedulePending(long milliseconds, Context context) {
 		Intent restartServiceIntent = new Intent(context, PendingCommunicationsService.class);
 		restartServiceIntent.setPackage(context.getPackageName());
 
@@ -95,14 +86,13 @@ public class PendingCommunicationsService extends IntentService
 				SystemClock.elapsedRealtime() + milliseconds,
 				restartServicePendingIntent);
 
-		Log.d(TAG, "scheluded "+milliseconds/1000f);
+		LogHelper.logConsole(TAG, "scheluded "+milliseconds/1000f);
 	}
 
 
-	public static void startPendingCommunications(Context context)
-	{
+	public static void startPendingCommunications(Context context) {
 
-		Log.d(TAG, "startPendingCommunications: ");
+		LogHelper.logConsole(TAG, "startPendingCommunications: ");
 		Communications.init(context);
 
 		//Communications.init(context.getApplicationContext());

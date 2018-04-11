@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
+import com.tendarts.sdk.common.LogHelper;
 import com.tendarts.sdk.common.PushController;
 import com.tendarts.sdk.gcm.DartsReceiver;
 
@@ -49,9 +50,9 @@ public class PersistentPush {
 			for (int i = 0; i < _list.size(); i++) {
 				Notification push = _list.get(i);
 				String pid= push.getString("id");
-				Log.d(TAG,"checking id "+pid);
+				LogHelper.logConsole(TAG,"checking id "+pid);
 				if (id.equals(pid)) {
-					Log.d(TAG, "match, removing");
+					LogHelper.logConsole(TAG, "match, removing");
 					push.deleted = true; //_list.remove(i);
 					JSONArray toSave = saveToJson(_list);
 					Configuration.instance(context).savePrivate(PUSH_KEY, toSave.toString());
@@ -127,7 +128,7 @@ public class PersistentPush {
 		Intent backIntent = new Intent();
 		String accessToken =  Configuration.instance(context).getAccessToken(context);
 		if (accessToken == null) {
-			android.util.Log.d(TAG, "notifyList: not access token");
+            LogHelper.logConsole(TAG, "notifyList: not access token");
 			return null;
 		}
 
@@ -148,14 +149,12 @@ public class PersistentPush {
 		synchronized (_list) {
 			//ArrayList<Notification> list = getStored(context);
 
-				for (int i = 0; i < _list.size(); i++)
-				{
+				for (int i = 0; i < _list.size(); i++) {
 					Notification p = _list.get(i);
 					String pid= p.getUID();
 					String id = push.getUID();
-					if( id != null &&  id.equals(pid))
-					{
-						Log.d(TAG, "adding existing");
+					if (id != null &&  id.equals(pid)) {
+                        LogHelper.logConsole(TAG, "adding existing");
 						TendartsClient.instance(context).logEvent("PUSH","duplicate push received, ignoring",id);
 						//do nothing, adding existing item
 						return	;
@@ -173,11 +172,10 @@ public class PersistentPush {
 	public static void save(Context context) {
 		try {
 			removeDeleted(context);
-			synchronized (_list)
-			{
+			synchronized (_list) {
 
 				JSONArray toSave = saveToJson(_list);
-				Log.d(TAG, "save: "+toSave);
+                LogHelper.logConsole(TAG, "save: "+toSave);
 				Configuration.instance(context).savePrivate(PUSH_KEY, toSave.toString());
 			}
 		} catch (Exception e) {
@@ -201,7 +199,7 @@ public class PersistentPush {
 					to_delete.add(p);
 				}
 			}
-			Log.d(TAG, "removeDeleted past 48 h"+to_delete);
+            LogHelper.logConsole(TAG, "removeDeleted past 48 h"+to_delete);
 			_list.removeAll(to_delete);
 			//save ( context);
 		}

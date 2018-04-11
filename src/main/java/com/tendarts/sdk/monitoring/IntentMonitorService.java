@@ -2,18 +2,16 @@ package com.tendarts.sdk.monitoring;
 
 
 import android.app.ActivityManager;
-import android.app.Instrumentation;
 import android.app.IntentService;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Constants;
+import com.tendarts.sdk.common.LogHelper;
 import com.tendarts.sdk.common.Util;
 import com.tendarts.sdk.communications.Communications;
 import com.tendarts.sdk.communications.ICommunicationObserver;
@@ -21,7 +19,6 @@ import com.tendarts.sdk.communications.ICommunicationObserver;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -73,32 +70,26 @@ public class IntentMonitorService extends IntentService
 			id = intent.getDataString();
 		}
 
-		Log.d(TAG, "onHandleIntent: "+id);
+		LogHelper.logConsole(TAG, "onHandleIntent: "+id);
 
 		String me = getApplicationContext().getApplicationInfo().packageName;
 		long current = new Date().getTime();
-		if( !isForeground( me ))
-		{
-			Log.d(TAG, "not on foreground sleeping ");
-			try
-			{
+		if (!isForeground( me )) {
+			LogHelper.logConsole(TAG, "not on foreground sleeping ");
+			try {
 				Thread.sleep(1000);
-			} catch (InterruptedException e)
-			{
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 
 		boolean found = false;
-		while ( isForeground(me))
-		{
-			Log.d(TAG, "on foreground");
+		while ( isForeground(me)) {
+			LogHelper.logConsole(TAG, "on foreground");
 			found = true;
-			try
-			{
+			try {
 				Thread.sleep(500);
-			} catch (InterruptedException e)
-			{
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
@@ -116,7 +107,7 @@ public class IntentMonitorService extends IntentService
 			{
 				e.printStackTrace();
 			}
-			Log.d(TAG, "json: "+object.toString());
+			LogHelper.logConsole(TAG, "json: "+object.toString());
 			Communications.postData(Constants.EVENTS, Util.getProvider(), 0, new ICommunicationObserver()
 			{
 				@Override
@@ -125,7 +116,7 @@ public class IntentMonitorService extends IntentService
 					TendartsClient.instance(getApplicationContext()).logEvent("SDK",
 							"session sent", ""+data);
 
-					Log.d(TAG, "session sent");
+					LogHelper.logConsole(TAG, "session sent");
 				}
 
 				@Override
@@ -134,7 +125,7 @@ public class IntentMonitorService extends IntentService
 					Util.checkUnauthorized(reason,getApplicationContext());
 					TendartsClient.instance(getApplicationContext()).logEvent("SDK",
 							"session sent", ""+reason);
-					Log.d(TAG, "can't send session" + reason);
+					LogHelper.logConsole(TAG, "can't send session" + reason);
 
 				}
 			},object.toString());
