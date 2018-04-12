@@ -688,7 +688,6 @@ public class TendartsSDK {
 		String reg_id = Configuration.instance(activity.getApplicationContext()).getPush();
 		if (reg_id != null) {
 			PushController.sendTokenAndVersion(reg_id, activity.getApplicationContext());
-			//Log.i(TAG, "sending version");
 		}
 
 		try {
