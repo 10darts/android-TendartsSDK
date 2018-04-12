@@ -11,6 +11,7 @@ public class LogHelper {
     public static final String LOG_CONSOLE_TAG_NET = "NET";
     public static final String LOG_CONSOLE_TAG_10DARTS = "10DARTS";
     public static final String LOG_CONSOLE_TAG_USER = "USER";
+    public static final String LOG_CONSOLE_TAG_ERROR = "ERROR";
 
     public static final String LOG_EVENT_CATEGORY_10DARTS = "10DARTS";
     public static final String LOG_EVENT_CATEGORY_PUSH = "PUSH";
@@ -24,6 +25,7 @@ public class LogHelper {
         }
 
     }
+
     public static void logConsole(String message) {
         logConsole(LOG_CONSOLE_TAG_10DARTS, message);
     }
@@ -34,6 +36,10 @@ public class LogHelper {
 
     public static void logConsoleUser(String message) {
         logConsole(LOG_CONSOLE_TAG_USER, message);
+    }
+
+    public static void logException(Exception e) {
+        logConsole(LOG_CONSOLE_TAG_ERROR, e.getMessage());
     }
 
     public static void logEvent(Context context, String category, String type, String message) {

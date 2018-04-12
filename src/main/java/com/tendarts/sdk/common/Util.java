@@ -58,17 +58,17 @@ public class Util {
 			}
 
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		} catch (InvocationTargetException e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 		return 2;
 	}
@@ -89,7 +89,7 @@ public class Util {
 			}
 			return 0;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 		return 2;
 	}
@@ -98,7 +98,7 @@ public class Util {
 		try {
 			return Build.VERSION.SDK_INT;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 		return 0;
 	}
@@ -117,7 +117,7 @@ public class Util {
 			}
 			Log.i(tag, builder.toString()); //log the data or use it as needed.
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 	}
 
@@ -134,7 +134,7 @@ public class Util {
 
 
 		} catch( Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 
 		try {
@@ -145,7 +145,7 @@ public class Util {
 			intent.putExtra("com.sonyericsson.home.intent.extra.badge.PACKAGE_NAME", context.getPackageName());
 			context.sendBroadcast(intent);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 	}
 
@@ -161,7 +161,7 @@ public class Util {
 			object.put("device",deviceId );
 			json = object.toString();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 
         LogHelper.logConsoleNet("DeviceJson: "+json);
@@ -180,7 +180,7 @@ public class Util {
 			Field idField = c.getDeclaredField(resName);
 			return idField.getInt(idField);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 			return -1;
 		}
 	}

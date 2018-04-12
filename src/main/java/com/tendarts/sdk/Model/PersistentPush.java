@@ -41,7 +41,7 @@ public class PersistentPush {
 	 */
 	public static void removeById(String id, Context context) {
 
-		Log.i(TAG,"Remove id:"+id);
+		LogHelper.logConsole(TAG,"Remove id:"+id);
 		if (id == null || id.isEmpty()) {
 			return;
 		}
@@ -179,7 +179,7 @@ public class PersistentPush {
 				Configuration.instance(context).savePrivate(PUSH_KEY, toSave.toString());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 	}
 
@@ -243,7 +243,7 @@ public class PersistentPush {
 					return toReturn;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 		_list = new ArrayList<>();
 		return _list;
@@ -270,7 +270,7 @@ public class PersistentPush {
 				list.add(storedPush);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 
 		Collections.sort(list, new Comparator<Notification>()

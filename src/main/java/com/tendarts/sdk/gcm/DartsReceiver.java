@@ -108,7 +108,7 @@ public class DartsReceiver extends BroadcastReceiver {
 										service.setData(Uri.parse(push.getCode()));
 										context.startService(service);
 									} catch (Exception e) {
-										e.printStackTrace();
+										LogHelper.logException(e);
 										LogHelper.logEvent(context, "onReceive","can't launch deep url",""+e.getMessage());
 										TendartsClient.instance(context).remoteLogException(e);
 									}

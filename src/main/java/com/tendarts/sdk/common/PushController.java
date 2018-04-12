@@ -52,7 +52,7 @@ public class PushController {
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 	}*/
 
@@ -109,7 +109,7 @@ public class PushController {
 			model = Build.MANUFACTURER+"|"+Build.MODEL;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 		String version = "";
 		if (context != null) {
@@ -127,7 +127,7 @@ public class PushController {
 		try {
 			lang = Locale.getDefault().getLanguage();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 		}
 
 		if(!toSend.equals( Configuration.instance(context).getPushSentToken()) ||
@@ -156,7 +156,7 @@ public class PushController {
 				data = object.toString();
 
 			} catch (Exception e) {
-				e.printStackTrace();
+				LogHelper.logException(e);
 			}
 
             LogHelper.logConsole(TAG, "sendTokenAndVersion: "+data);
@@ -192,7 +192,7 @@ public class PushController {
 						}
 
 					} catch (Exception e) {
-						e.printStackTrace();
+						LogHelper.logException(e);
 						PendingCommunicationController.addPendingToken(e.getMessage(), context);
 
 					}

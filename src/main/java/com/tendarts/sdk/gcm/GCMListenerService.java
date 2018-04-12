@@ -496,7 +496,7 @@ public class GCMListenerService extends GcmListenerService
 			}
 			*/
 		} catch( Exception e) {
-			e.printStackTrace();
+			LogHelper.logException(e);
 			try {
 			    LogHelper.logEventPush(context,"main_exception", e.getMessage());
 				TendartsClient.instance(getApplicationContext(),getApplicationInfo()).remoteLogException(e);
