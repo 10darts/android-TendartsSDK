@@ -5,13 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.tendarts.sdk.common.Util;
 import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
+import com.tendarts.sdk.common.LogHelper;
 import com.tendarts.sdk.common.PushController;
+import com.tendarts.sdk.common.Util;
 
 import java.io.IOException;
 
@@ -19,12 +20,10 @@ import java.io.IOException;
  * Created by jorgearimany on 3/4/17.
  */
 
-public class GCMRegistrationIntentService extends IntentService
-{
+public class GCMRegistrationIntentService extends IntentService {
 
 	private static final String[] TOPICS = {"global"};
 	private static final String TAG = "GCM Intent Service";
-	public static final String PUSH_CATEGORY = "Push";
 
 	/**
 	 * Creates an IntentService.  Invoked by your subclass's constructor.
@@ -37,24 +36,21 @@ public class GCMRegistrationIntentService extends IntentService
 	}
 
 	@Override
-	protected void onHandleIntent(Intent intent)
-	{
+	protected void onHandleIntent(Intent intent) {
 
-		try
-		{
-			Log.d(TAG, "onHandleIntent: ");
+		try {
+			LogHelper.logConsole(TAG, "onHandleIntent: ");
 
 			String senderId = Configuration.instance(getApplicationContext())
 					.getGCMDefaultSenderId(getApplicationContext(),getApplicationInfo().packageName);
 
 			//String sender2 = Configuration.instance(getApplicationContext()).getGCMDefaultSenderId(getApplicationContext());
 
-			Log.d(TAG, "Sender: "+senderId);
+			LogHelper.logConsole(TAG, "Sender: "+senderId);
 
 			Util.printExtras(TAG,intent.getExtras());
 
-			if(senderId == null)
-			{
+			if (senderId == null) {
 				return;
 			}
 
@@ -75,21 +71,17 @@ public class GCMRegistrationIntentService extends IntentService
 			subscribeTopics(token);
 
 			// [END register_for_gcm]
-		}
-		catch (Exception e)
-		{
-			Log.d(TAG, "Failed to complete token refresh exception:", e);
+		} catch (Exception e) {
+			LogHelper.logConsole(TAG, "Failed to complete token refresh exception: " + e.getMessage());
 			// If an exception happens while fetching the new token or updating our registration data
 			// on a third-party server, this ensures that we'll attempt the update at a later time.
 			e.printStackTrace();
 			Configuration.instance(getApplicationContext()).setPushSentToken(null);
 
-			try
-			{
+			try {
 				TendartsClient.instance(getApplicationContext()).remoteLogException(e);
-				TendartsClient.instance(getApplicationContext()).logEvent(PUSH_CATEGORY,"errorRegister", e.getMessage());
-			} catch (Exception es)
-			{
+				LogHelper.logEventPush(getApplicationContext(), "errorRegister", e.getMessage());
+			} catch (Exception es) {
 				es.printStackTrace();
 			}
 		}
@@ -97,36 +89,29 @@ public class GCMRegistrationIntentService extends IntentService
 
 	}
 
-	private void sendRegistrationToServer(String reg_id, Context context)
-	{
+	private void sendRegistrationToServer(String reg_id, Context context) {
 
-		if( reg_id != null && reg_id.length() > 1 )
-		{
+		if (reg_id != null && reg_id.length() > 1 ) {
 			//handle new registration id:
 
 			String saved_id = Configuration.instance(getApplicationContext()).getPush();
-			if( !reg_id.equalsIgnoreCase(saved_id) || Configuration.instance(context).getPushSentToken() == null
-					|| Configuration.instance(context).getPushCode() == null)
-			{
+			if(!reg_id.equalsIgnoreCase(saved_id) || Configuration.instance(context).getPushSentToken() == null
+					|| Configuration.instance(context).getPushCode() == null) {
 				PushController.sendRegistrationToken(reg_id, getApplicationContext());
 				Log.i(TAG, "new reg id");
-			}
-			else
-			{
+			} else {
 				Log.i(TAG, "same reg id");
 			}
 
 
 		}
 
-		try
-		{
-			TendartsClient.instance(getApplicationContext()).logEvent(PUSH_CATEGORY,"registered", "id:" + reg_id.hashCode());
-		}
-		catch (Exception e)
-		{
+		try {
+			LogHelper.logEventPush(getApplicationContext(),"registered", "id:" + reg_id.hashCode());
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 	}
 
 
@@ -137,8 +122,7 @@ public class GCMRegistrationIntentService extends IntentService
 	 * @throws IOException if unable to reach the GCM PubSub service
 	 */
 	// [START subscribe_topics]
-	private void subscribeTopics(String token) throws IOException
-	{
+	private void subscribeTopics(String token) throws IOException {
 		GcmPubSub pubSub = GcmPubSub.getInstance(this);
 		for (String topic : TOPICS) {
 			pubSub.subscribe(token, "/topics/" + topic, null);

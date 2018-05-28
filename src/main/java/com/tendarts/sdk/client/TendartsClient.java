@@ -12,6 +12,8 @@ import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.common.Configuration;
+import com.tendarts.sdk.common.LogHelper;
+import com.tendarts.sdk.gcm.DartsReceiver;
 
 import java.security.InvalidParameterException;
 
@@ -39,103 +41,81 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 		_me = null;
 	}
 
-	public final static TendartsClient instance(Context context)
-	{
-		return instance(context.getApplicationContext(),null);
+	public final static TendartsClient instance(Context context) {
+		return instance(context,null);
 	}
 
-	public final static TendartsClient instance(Context context, ApplicationInfo info)
-	{
+	public final static TendartsClient instance(Context context, ApplicationInfo info) {
 		Context c = context;
 
 
-		if( context != null)
-		{
+		if (context != null) {
 			c = context.getApplicationContext();
 		}
-		if( _me == null)
-		{
-			Log.d(TAG, "instance: creating from context");
-			if( c == null)
-			{
-				Log.w(TAG, "instance: no context!!!!!" );
+		if(_me == null) {
+			LogHelper.logConsole(TAG, "instance: creating from context");
+			if(c == null) {
+				LogHelper.logConsole(TAG, "instance: no context!!!!!" );
 				return new TendartsClientDefaultImplementation();
 
 			}
 
 			String name = null;
-			if( info != null)
-			{
-				Log.d(TAG, "instance: initiating from "+ info);
+			if (info != null) {
+				LogHelper.logConsole("instance: initiating from "+ info);
 				name = Configuration.getClientClassName(c,info	);
-			}
-			else
-			{
+			} else {
 				name = Configuration.getClientClassName(c);
 			}
-			if( name != null && name.length()>0)
-			{
+			if (name != null && name.length()>0) {
+				LogHelper.logConsole(TAG, "client class: "+name);
 
-				Log.d(TAG, "client class: "+name);
-				try
-				{
+				try {
 					_me = (TendartsClient) Class.forName(name).newInstance();
 					_me.performSetup(context);
-				} catch (InstantiationException e)
-				{
+				} catch (InstantiationException e) {
 					e.printStackTrace();
 					Log.e("DartsSDK:Config", "Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders");
 
 					throw new InvalidParameterException("Error instantiating "+name);
-				} catch (IllegalAccessException e)
-				{
+
+				} catch (IllegalAccessException e) {
 					e.printStackTrace();
 					Log.e("DartsSDK:Config", "Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders");
 					throw  new InvalidParameterException("Illegal Access instantiating "+name);
-				} catch (ClassNotFoundException e)
-				{
+
+				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 					Log.e("DartsSDK:Config", "Please add  tendarts_sdk_client_class:\\\"com.yourcompany.YourClientClass\\\" in manifestPlaceholders");
 					throw new InvalidParameterException("could not find "+name);
-				}
-				catch (Exception e)
-				{
+
+				} catch (Exception e) {
 					throw new InvalidParameterException("Exception instantiating "+name);
 				}
+			} else {
+				LogHelper.logConsole(TAG, "could not get client class: "+name);
 			}
-			else
-			{
-				Log.w(TAG, "could not get client class: "+name);
-			}
-			if( _me == null)
-			{
+			if (_me == null) {
 				_me = new TendartsClientDefaultImplementation();
 			}
 		}
 		return _me;
 	}
 
-
-
 	@Override
-	public final void onReceive(Context context, Intent intent)
-	{
-		if(intent!=null)
-		{
+	public final void onReceive(Context context, Intent intent) {
+
+		if (intent != null) {
 
 			String action = intent.getAction();
 
-
-			if ("com.darts.sdk.CLEAR_PUSHES".equalsIgnoreCase(action))
-			{
+			if (DartsReceiver.CLEAR_PUSHES.equalsIgnoreCase(action)) {
 
 				PersistentPush.clear(context);
-				Log.i(TAG,"clearing push list");
-				if( intent.hasExtra("dismiss"))
-				{
+				LogHelper.logConsole(TAG,"clearing push list");
+				if (intent.hasExtra("dismiss")) {
 					int id = intent.getIntExtra("dismiss", -1);
-					if( id != -1)
-					{
+					if (id != -1) {
 
 						NotificationManager manager =
 								(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -145,21 +125,15 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 					}
 				}
 
-				try
-				{
-					logEvent("Push","clear list from push", "");
-				}
-				catch (Exception e)
-				{
+				try {
+					LogHelper.logEventPush(context,"clear list from push", "");
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				onNotificationListCleared();
 				return;
 
-
-
 			}
-
 		}
 	}
 
@@ -167,8 +141,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * Called when the user has rejected location permission, do not make any further UI interaction with the user regarding location permission
 	 */
 	@Override
-	public void onUserRejectedLocationPermission()
-	{
+	public void onUserRejectedLocationPermission() {
 
 	}
 
@@ -176,8 +149,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * Called when the user has accepted location permission, note that asking for permissions depends on several factors and is not always asked to the user.
 	 */
 	@Override
-	public void onUserAcceptedLocationPermission()
-	{
+	public void onUserAcceptedLocationPermission() {
 
 	}
 
@@ -188,8 +160,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @param e the exception to be logged
 	 */
 	@Override
-	public void remoteLogException(Exception e)
-	{
+	public void remoteLogException(Exception e) {
 
 	}
 
@@ -210,8 +181,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @param message  message
 	 */
 	@Override
-	public void logEvent(String category, String type, String message)
-	{
+	public void logEvent(String category, String type, String message) {
 
 	}
 
@@ -225,8 +195,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @param context context to be used, for example to get string resources
 	 */
 	@Override
-	public void performSetup(Context context)
-	{
+	public void performSetup(Context context) {
 
 	}
 
@@ -238,8 +207,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @param notification
 	 */
 	@Override
-	public void onNotificationShowed(Notification notification)
-	{
+	public void onNotificationShowed(Notification notification) {
 
 	}
 
@@ -249,8 +217,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @param notification
 	 */
 	@Override
-	public void onNotificationShowedInList(Notification notification)
-	{
+	public void onNotificationShowedInList(Notification notification) {
 
 	}
 
@@ -310,8 +277,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @param context context to be used
 	 */
 	@Override
-	public void openNotificationList(Context context)
-	{
+	public void openNotificationList(Context context) {
 
 	}
 
@@ -336,8 +302,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @return
 	 */
 	@Override
-	public RemoteViews getCustomNotificationSmallView(Notification notification, Context context)
-	{
+	public RemoteViews getCustomNotificationSmallView(Notification notification, Context context) {
 		return null;
 	}
 
@@ -351,8 +316,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @return
 	 */
 	@Override
-	public RemoteViews getCustomNotificationLargeView(Notification notification, Context context)
-	{
+	public RemoteViews getCustomNotificationLargeView(Notification notification, Context context) {
 		return null;
 	}
 
@@ -369,8 +333,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 * @param context      context to use
 	 */
 	@Override
-	public void loadBackgroundCustomNotificationData(IBackgroundCustomNotificationLoaderListener listener, Notification notification, RemoteViews rv, RemoteViews rvBig, Context context)
-	{
+	public void loadBackgroundCustomNotificationData(IBackgroundCustomNotificationLoaderListener listener, Notification notification, RemoteViews rv, RemoteViews rvBig, Context context) {
 
 	}
 
@@ -394,8 +357,7 @@ public abstract   class TendartsClient extends BroadcastReceiver implements INot
 	 */
 
 	@Override
-	public  void onUserLinkedToDevice()
-	{
+	public  void onUserLinkedToDevice() {
 
 	}
 

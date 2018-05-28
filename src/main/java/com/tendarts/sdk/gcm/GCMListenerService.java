@@ -1,5 +1,6 @@
 package com.tendarts.sdk.gcm;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -16,24 +17,24 @@ import android.text.style.StyleSpan;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.tendarts.sdk.common.PendingCommunicationController;
-import com.tendarts.sdk.communications.Communications;
-import com.tendarts.sdk.communications.ICommunicationObserver;
-import com.tendarts.sdk.communications.IImageDownloadObserver;
 import com.google.android.gms.gcm.GcmListenerService;
-
+import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.Model.PersistentPush;
 import com.tendarts.sdk.Model.Push;
-import com.tendarts.sdk.Model.Notification;
 import com.tendarts.sdk.TendartsSDK;
 import com.tendarts.sdk.client.INotifications;
 import com.tendarts.sdk.client.TendartsClient;
 import com.tendarts.sdk.common.Configuration;
 import com.tendarts.sdk.common.Constants;
+import com.tendarts.sdk.common.LogHelper;
+import com.tendarts.sdk.common.PendingCommunicationController;
 import com.tendarts.sdk.common.PushController;
 import com.tendarts.sdk.common.Util;
+import com.tendarts.sdk.communications.Communications;
+import com.tendarts.sdk.communications.ICommunicationObserver;
+import com.tendarts.sdk.communications.IImageDownloadObserver;
 
-
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -48,42 +49,33 @@ public class GCMListenerService extends GcmListenerService
 {
 	private static final String TAG = "GCM Listener";
 	public static int not_id = PushController.NOTIFICATION_ID;
-
+	private static final String DEFAULT_CHANNEL_ID = "default_channel_id";
+	private static final int PENDING_INTENT_REQUEST_CODE = 12345;
 
 	//todo cambiar single_id por id push cuando no stacked
 	static Push.IImageUrlObserver _imageObserver;
 
 	static TendartsClient.IBackgroundCustomNotificationLoaderListener _backgroundListener;
-	public void onMessageReceived(String from, Bundle data)
-	{
+
+	public void onMessageReceived(String from, Bundle extras) {
+
 		Context context = getApplicationContext();
-		if( context == null)
-		{
+		if (context == null) {
 			context = this;
 		}
 		TendartsSDK.instance().initCommunications(context);
-		super.onMessageReceived(from, data);
+		super.onMessageReceived(from, extras);
 		Log.i(TAG, "Message received:" + from);
-		Util.printExtras(TAG, data);
+		Util.printExtras(TAG, extras);
 
-
-		if( Configuration.getAccessToken(context)== null)
-		{
-			android.util.Log.d(TAG, "onMessageReceived: sdk not configured");
+		if (Configuration.getAccessToken(context) == null) {
+			LogHelper.logConsole(TAG, "onMessageReceived: sdk not configured");
 			return;
 		}
 
-		Bundle extras =data;
+		try {
 
-
-		try
-		{
-
-
-
-			try
-			{
-
+			try {
 
 				//----- check metadata
 				final String id = extras.getString("id");
@@ -91,18 +83,14 @@ public class GCMListenerService extends GcmListenerService
 
 				int report =  0;
 
-				if( "1".equalsIgnoreCase(str))
-				{
+				if( "1".equalsIgnoreCase(str)) {
 					report = 1;
-				}
-				else
-				{
+				} else {
 					report = extras.getInt("cfm");
 				}
 
 				String origin = extras.getString("org");
-				if( !"10d".equals(origin))
-				{
+				if (!"10d".equals(origin)) {
 					TendartsClient.instance(getApplicationContext()).remoteLogException(
 							new Exception("invalid origin received: "+origin));
 					return;
@@ -160,13 +148,10 @@ public class GCMListenerService extends GcmListenerService
 				}
 */
 
-
 				//---- send recived
-				try
-				{
+				try {
 
-
-					TendartsClient.instance(context, getApplicationInfo()).logEvent("Push","received", extras.getString("message"));
+					LogHelper.logEventPush(context,"onMessageReceived", extras.getString("message"));
 
 					/*Tracker _t = OnpublicoApplication.getPushTracker();
 					if( _t != null)
@@ -176,172 +161,114 @@ public class GCMListenerService extends GcmListenerService
 								.setAction("received").setLabel("" + extras.getString("message")).build());
 						Log.i(TAG, "Push sent to analytics:" + id + " " + extras.getString("message"));
 					}*/
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 				//---- report receive if needed
-				Log.d(TAG, str + " " + report);
-				if( id != null && report == 1)
-				{
+				LogHelper.logConsole(TAG, str + " " + report);
+				if (id != null && report == 1) {
 					String json = null;
 					json = Util.getDeviceJson(context);
 
 
-					if( json != null)
-					{
+					if (json != null) {
 						final Context finalContext = context;
 
 						Communications.patchData(
-								String.format(Constants.pushReceived,
-										id
-										),
-								Util.getProvider(), 0, new ICommunicationObserver()
-								{
+								String.format(Constants.PUSH_RECEIVED, id),
+								Util.getProvider(), 0, new ICommunicationObserver() {
 									@Override
-									public void onSuccess(int operationId, JSONObject data)
-									{
-										TendartsClient.instance(finalContext).
-												logEvent("PUSH","push received successfully reported","");
-										Log.i(TAG, "push rcv reported");
+									public void onSuccess(int operationId, JSONObject data) {
+										LogHelper.logEventPush(finalContext,"onMessageReceived","push received successfully reported");
+										LogHelper.logConsole("push received successfully reported");
 									}
 
 									@Override
 									public void onFail(int operationId, String reason,
-													   Communications.PendingCommunication pending)
-									{
+													   Communications.PendingCommunication pending) {
 										Util.checkUnauthorized(reason,getApplicationContext());
-										TendartsClient.instance(finalContext).
-												logEvent("PUSH","push received report can't send:",""+reason);
+										LogHelper.logEventPush(finalContext,"onMessageReceived", "push received report failed to send: " + reason);
 
-										if( reason != null &&reason.contains("400"))
-										{
+										if (reason != null && reason.contains("400")) {
 											//debug, borrar
-											TendartsClient.instance(finalContext).
-													logEvent("PUSH","push received send 400:",""+
-											reason + " duplicate: sent id:" + id + " stored id's:"
-															+ PersistentPush.getAllIds(finalContext));
-										}
-										else
-										{
+											LogHelper.logEventPush(
+													finalContext,
+													"onMessageReceived",
+													"push received send 400: "+ reason +
+															" duplicate: sent id:" + id + " stored id's:" +
+															PersistentPush.getAllIds(finalContext));
+										} else {
 											PendingCommunicationController.addPending(pending, getApplicationContext());
 										}
-										Log.w(TAG, "push rcv failed: " + reason);
+										LogHelper.logConsole("push received failed to report");
 									}
 								}, json, false);
 					}
 				}
-			}
-			catch ( Exception e)
-			{
+			} catch ( Exception e) {
 				e.printStackTrace();
 			}
 
+			postNotification(context, extras);
 
-
-			postNotification( context, extras);
-
-
-
-
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-
-
 
 	}
 
+	public void postNotification(final Context context, Bundle extras) {
 
-
-
-	public  void postNotification(final Context context, Bundle extras)
-	{
-
-		try
-		{
+		try {
 			int count =0;
-			if( extras.containsKey("badge"))
-			{
-				Log.d(TAG, "postNotification: new badge");
+			if (extras.containsKey("badge")) {
+				LogHelper.logConsole(TAG, "postNotification: new badge");
 				count = Integer.parseInt(extras.getString("badge"));
 				Util.setBadgeCount(count, context);
-			}
-			else
-			{
+			} else {
 				//if no bdge in push do nothing
-				Log.d(TAG, "postNotification: no badge");
+				LogHelper.logConsole(TAG,"postNotification: no badge");
 			}
-
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-
-
-		try
-		{
+		try {
 
 			String message = extras.getString("message").trim();
 
-			try
-			{
-				if (!Configuration.instance(context.getApplicationContext()).getNotificationsEnabled())
-				{
-					try
-					{
-
-						TendartsClient.instance(context).logEvent("Push","config_disabled","" + message);
-
-					}
-					catch (Exception e)
-					{
+			try {
+				if (!Configuration.instance(context.getApplicationContext()).getNotificationsEnabled()) {
+					try {
+						LogHelper.logEventPush(context,"postNotification","config_disabled. " + message);
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
 					return;
 				}
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
-
 			TendartsClient.instance(context).onNotificationReceived(buildPushFromBundle(extras));
-
 
 			final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
 
-
-
-
-			if( message == null || message.length() <1)
-			{
-				try
-				{
+			if (message == null || message.length() <1) {
+				try {
 					Log.e(TAG, "null message...");
+					LogHelper.logEventPush(context,"postNotification", "no_message. "+extras.getString("id"));
 
-
-					TendartsClient.instance(context).logEvent("Push","no_message",""+extras.getString("id"));
 					StringBuilder all = new StringBuilder("Extras: ");
-					for (String key : extras.keySet())
-					{
+					for (String key : extras.keySet()) {
 						Object value = extras.get(key);
 						all.append(key).append(": ").append(value).append(";");
 					}
-					TendartsClient.instance(context).logEvent("Push","all_no_message", all.toString());
+					LogHelper.logEventPush(context,"postNotification", "all_no_message: " + all.toString());
 
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				return;
@@ -351,45 +278,32 @@ public class GCMListenerService extends GcmListenerService
 
 			String title = extras.getString("title");
 
-
-			if (title == null || title.length() < 1)
-			{
+			if (title == null || title.length() < 1) {
 				int index = message.indexOf(":");
-				if( index >0 && index < message.length()-2)
-				{
+				if (index >0 && index < message.length()-2) {
 					title = message.substring(0,index+1);
 					message = message.substring(index+1);
 
-				}
-				else
-				{
-					//title = "Onpublico";
 				}
 			}
 
 			final Notification push = buildPushFromBundle(extras);
 
-
 			boolean showed = false;
-			if( PersistentPush.alreadyContains(push, context))
-			{
+			if (PersistentPush.alreadyContains(push, context)) {
 				showed = true;
-				Log.d(TAG, "postNotification: pust already contained");
-
+				LogHelper.logConsole(TAG,"postNotification: pust already contained");
 			}
 
-
-			final  List<Notification> pushes = PersistentPush.getStored(context);
-			if(
-					(TendartsSDK.instance().getAlwaysSowLastNotification() || !TendartsSDK.instance().getStackNotifications())
-					&& ! showed)//always show latest
-			{
+			final List<Notification> pushes = PersistentPush.getStored(context);
+			if ((TendartsSDK.instance().getAlwaysSowLastNotification() ||
+					!TendartsSDK.instance().getStackNotifications())
+					&& !showed) {
+			    //always show latest
 				final PendingIntent pendingIntent = PersistentPush.buildPendingIntent(push, context, true);
-				if( pendingIntent == null)
-				{
-					try
-					{
-						TendartsClient.instance(context).logEvent("Push","no_build_intent","" + push);
+				if (pendingIntent == null) {
+					try {
+					    LogHelper.logEventPush(context, "postNotification","no_build_intent. " + push);
 						/*
 						Tracker _t = OnpublicoApplication.getPushTracker();
 						if( _t != null)
@@ -398,9 +312,7 @@ public class GCMListenerService extends GcmListenerService
 									.setNonInteraction(true)
 									.setCategory("Push").setAction("no_build_intent").setLabel("" + push).build());
 						}*/
-					}
-					catch (Exception e)
-					{
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
 					return;
@@ -408,59 +320,95 @@ public class GCMListenerService extends GcmListenerService
 				boolean makeSound = false;
 				Calendar c = Calendar.getInstance();
 				int hour = c.get(Calendar.HOUR_OF_DAY);
-				if( !TendartsSDK.instance().getLimitNotificationSoundAndVibrationTime())
-				{
+				if (!TendartsSDK.instance().getLimitNotificationSoundAndVibrationTime()) {
+					makeSound = true;
+				} else if( hour >= TendartsSDK.instance().getNotificationSoundAndVibrationFirstHour()
+						&& hour < TendartsSDK.instance().getNotificationSoundAndVibrationLastHour()) {
 					makeSound = true;
 				}
-				else if( hour >= TendartsSDK.instance().getNotificationSoundAndVibrationFirstHour() && hour < TendartsSDK.instance().getNotificationSoundAndVibrationLastHour())
-				{
-					makeSound = true;
-				}
-				Log.d(TAG, "postNotification: sound in notification:"+makeSound);
+				LogHelper.logConsole(TAG, "postNotification: sound in notification:"+makeSound);
 
 				int color = Color.parseColor("#000000");
-				try
-				{
+				try {
 					color = context.getResources().getColor(TendartsSDK.instance().getNotificationColorResource());
-
-				}
-				catch ( Exception e)
-				{
+				} catch ( Exception e) {
 					e.printStackTrace();
 				}
 
-				final  NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-						.setColor(color)
-						.setSmallIcon(TendartsSDK.instance().getSmallIconResource())
-						.setContentTitle(title)
-						.setContentText(message)
-						.setContentIntent(pendingIntent)
-						.setAutoCancel(true)
-						//.setCategory(Notification.CATEGORY_SOCIAL)
-						.setLargeIcon( TendartsSDK.instance().getLargeIcon(context))
+				final NotificationCompat.Builder builder = getNotificationBuilder(context, title, message, pendingIntent);
 
-						.setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+				builder.setStyle(new NotificationCompat.BigTextStyle().bigText(message))
 						.setExtras(extras);
 
 				//noinspection InlinedApi
-				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)//21
-				{
+				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 					builder.setVisibility(android.app.Notification.VISIBILITY_PUBLIC);
 				}
 				//noinspection InlinedApi
-				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)//16
-				{
+				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
 					builder.setPriority(android.app.Notification.PRIORITY_HIGH);
 				}
 
-				if( makeSound)
-				{
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					String defaultNotificationChannelId = Configuration.getDefaultNotificationChannelId(context);
+					NotificationChannel notificationChannel = new NotificationChannel(
+							DEFAULT_CHANNEL_ID,
+							defaultNotificationChannelId,
+							NotificationManager.IMPORTANCE_HIGH
+					);
+					if (mNotificationManager != null) {
+						mNotificationManager.createNotificationChannel(notificationChannel);
+					}
+				}
+
+				if (extras.containsKey("r")) {
+					// Add action
+					try {
+
+						String replyArrayString = extras.getString("r");
+						JSONArray jsonArray = new JSONArray(replyArrayString);
+						for (int i = 0; i < jsonArray.length(); i++) {
+							JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+							String id = jsonObject.getString("id");
+							String actionText = jsonObject.getString("t");
+							String actionCommand = jsonObject.getString("p");
+
+							Intent actionIntent = new Intent();
+							actionIntent.setAction(DartsReceiver.NOTIFICATION_ACTION);
+							actionIntent.putExtra(DartsReceiver.PARAM_ACTION_ID, id);
+							actionIntent.putExtra(DartsReceiver.PARAM_ACTION_COMMAND, actionCommand);
+							String accessToken = Configuration.getAccessToken(context);
+							if (accessToken != null) {
+								actionIntent.putExtra(DartsReceiver.PARAM_ORIGIN, accessToken.hashCode());
+							}
+							PendingIntent pendingActionIntent = PendingIntent.getBroadcast(
+									context,
+									PENDING_INTENT_REQUEST_CODE,
+									actionIntent,
+									PendingIntent.FLAG_CANCEL_CURRENT
+							);
+
+							NotificationCompat.Action action = new NotificationCompat.Action.Builder(
+									0,
+									actionText,
+									pendingActionIntent)
+									.build();
+							builder.addAction(action);
+
+							LogHelper.logEventPush(context,"postNotification","Set up reply action: " + actionCommand);
+						}
+
+					} catch (Throwable tx) {
+						Log.e(TAG, "Couldn't read reply commands");
+					}
+				}
+
+				if (makeSound) {
 					builder
 							.setVibrate(new long[]{1000, 1000, 1000, 1000, 1000})
 							.setDefaults(android.app.Notification.DEFAULT_SOUND);
-				}
-				else
-				{
+				} else {
 					builder.setVibrate(new long[]{0});
 				}
 				final android.app.Notification notification = builder.build();
@@ -468,10 +416,7 @@ public class GCMListenerService extends GcmListenerService
 				RemoteViews rv = TendartsClient.instance(context).getCustomNotificationSmallView(push,context);
 				RemoteViews rv2 = TendartsClient.instance(context).getCustomNotificationLargeView(push,context);
 
-
-
-				if( rv != null )
-				{
+				if (rv != null ) {
 
 					_backgroundListener = new BackgroundListener(
 							context,
@@ -486,20 +431,15 @@ public class GCMListenerService extends GcmListenerService
 							);
 
 
-				}
-				else
-				{
-					Log.i(TAG, "new push notification posted" );
-					if( push.hasImage(context))
-					{
+				} else {
+				    LogHelper.logConsole(TAG, "new push notification posted");
+					if (push.hasImage(context)) {
 						final String finalMessage = message;
 						final String finalTitle = title;
 						final boolean finalShowed = showed;
-						Communications.getImage(push.getThumbnail(), 0, new IImageDownloadObserver()
-						{
+						Communications.getImage(push.getThumbnail(), 0, new IImageDownloadObserver() {
 							@Override
-							public void onSuccess(int operationId, Bitmap data)
-							{
+							public void onSuccess(int operationId, Bitmap data) {
 								//builder.setLargeIcon(data)
 								builder.setStyle(new
 										NotificationCompat.BigPictureStyle()
@@ -511,51 +451,36 @@ public class GCMListenerService extends GcmListenerService
 
 								mNotificationManager.notify(PushController.getNotificationId(push), notification1);
 								notifyShowed(originalMessage, push);
-								if( pushes.size() >1  && TendartsSDK.instance().getStackNotifications() && !finalShowed)
-								{
+								if( pushes.size() >1  && TendartsSDK.instance().getStackNotifications()
+										&& !finalShowed) {
 									notifyList(context, mNotificationManager, push, pushes);
 								}
 							}
 
 							@Override
-							public void onFail(int operationId, String reason)
-							{
+							public void onFail(int operationId, String reason) {
 								mNotificationManager.notify(PushController.getNotificationId(push), notification);
 								notifyShowed(originalMessage, push);
-								if( pushes.size() >1  && TendartsSDK.instance().getStackNotifications() && !finalShowed)
-								{
+								if( pushes.size() >1  && TendartsSDK.instance().getStackNotifications()
+										&& !finalShowed) {
 									notifyList(context, mNotificationManager, push, pushes);
 								}
 							}
 						},1024,1024);
-					}
-					else
-					{
-
+					} else {
 
 						mNotificationManager.notify(PushController.getNotificationId(push), notification);
 						notifyShowed(originalMessage, push);
 
-						if( pushes.size() >1  && TendartsSDK.instance().getStackNotifications() && !showed)
-						{
+						if (pushes.size() >1 && TendartsSDK.instance().getStackNotifications() && !showed) {
 							notifyList(context, mNotificationManager, push, pushes);
 						}
 					}
 				}
 
-
-
-
-
-
-
 			}
 
-
-
 			PersistentPush.addPush(push,context);
-
-
 
 /*
 			try
@@ -570,81 +495,54 @@ public class GCMListenerService extends GcmListenerService
 				e.printStackTrace();
 			}
 			*/
-		}
-
-		catch( Exception e)
-		{
-			e.printStackTrace();
-			try
-			{
-				TendartsClient.instance(getApplicationContext(), getApplicationInfo()).logEvent("Push","main_exception","" + e.getMessage());
+		} catch( Exception e) {
+			LogHelper.logException(e);
+			try {
+			    LogHelper.logEventPush(context,"main_exception", e.getMessage());
 				TendartsClient.instance(getApplicationContext(),getApplicationInfo()).remoteLogException(e);
 
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
 	}
 
-
-
-	private void notifyShowed(String originalMessage, Notification push)
-	{
-		try
-		{
-			TendartsClient.instance(getApplicationContext(), getApplicationInfo()).logEvent("Push", "showed_alone", "" + originalMessage);
+	private void notifyShowed(String originalMessage, Notification push) {
+		try {
+            LogHelper.logEventPush(getApplicationContext(), "showed_alone", originalMessage);
 			TendartsClient.instance(getApplicationContext(), getApplicationInfo()).onNotificationShowed(push);
 
-
-		} catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	@NonNull
-	public Notification buildPushFromBundle(Bundle extras)
-	{
+	public Notification buildPushFromBundle(Bundle extras) {
 		String message = extras.getString("message").trim();
 		String title = extras.getString("title");
 
-
-		if (title == null || title.length() < 1)
-		{
+		if (title == null || title.length() < 1) {
 			int index = message.indexOf(":");
-			if( index >0 && index < message.length()-2)
-			{
+			if (index >0 && index < message.length()-2) {
 				title = message.substring(0,index+1);
 				message = message.substring(index+1);
-
-			}
-			else
-			{
-				//title = "Onpublico";
 			}
 		}
 		Notification push = new Notification(title,message);
-		try
-		{
+		try {
 
-			for (String key : extras.keySet())
-			{ //extras is the Bundle containing info
-				try
-				{
+			for (String key : extras.keySet()) {
+				//extras is the Bundle containing info
+				try {
 					String value = extras.getString(key);
 					push.putExtra(key, value);
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -692,8 +590,6 @@ public class GCMListenerService extends GcmListenerService
 			push.putExtra(name, extras.getString(name));
 		}
 		*/
-
-
 
 		//todo add payload (ctm) y parsear dsc
 		return push;
@@ -849,87 +745,80 @@ public class GCMListenerService extends GcmListenerService
 				Log.i(TAG, "new push picasso prepare");
 			}
 
-
 		};
 	}
 */
 
-	public static void notifyList(Context context, NotificationManager mNotificationManager, Notification push, List<Notification> pushes)
-	{
-		try
-		{
-			Log.d(TAG, "notifyList");
+	public static void notifyList(Context context, NotificationManager mNotificationManager, Notification push, List<Notification> pushes) {
+		try {
+		    LogHelper.logConsole(TAG, "notifyList");
 
-			if( pushes.size()< 1)
-			{
+			if (pushes.size()< 1) {
 				return;
 			}
-			Intent backIntent = new Intent(context,DartsReceiver.class);
+			Intent backIntent = new Intent();
 
-			backIntent.setAction("com.darts.SDK.OPEN_LIST");
+			backIntent.setAction(DartsReceiver.OPEN_LIST);
 			backIntent.putExtra("dismiss", not_id);
-			String accessToken = Configuration.instance(context).getAccessToken(context);
-			if( accessToken == null )
-			{
-				android.util.Log.d(TAG, "notifyList: not access token");
+			String accessToken = Configuration.getAccessToken(context);
+			if (accessToken == null) {
+			    LogHelper.logConsole(TAG, "notifyList: not access token");
 				return;
 			}
-			backIntent.putExtra("sorg", accessToken.hashCode());
+			backIntent.putExtra(DartsReceiver.PARAM_ORIGIN, accessToken.hashCode());
 
 			//backIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
 
-			PendingIntent pi = PendingIntent.getBroadcast(context,12345,backIntent,PendingIntent.FLAG_UPDATE_CURRENT);
-
+			PendingIntent pi = PendingIntent.getBroadcast(context,PENDING_INTENT_REQUEST_CODE,backIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
 					/*PendingIntent.getActivities(context, PushController.NOTIFICATION_ID,
 					new Intent[]{backIntent},
 					PendingIntent.FLAG_UPDATE_CURRENT
 			);*/
 
-			Intent cancel = new Intent(context,DartsReceiver.class);
-			cancel.setAction("com.darts.SDK.CLEAR_PUSHES");
+			Intent cancel = new Intent();
+			cancel.setAction(DartsReceiver.CLEAR_PUSHES);
 			cancel.putExtra("dismiss", not_id);
-			cancel.putExtra("sorg", Configuration.instance(context).getAccessToken(context).hashCode());
+			cancel.putExtra(DartsReceiver.PARAM_ORIGIN, Configuration.getAccessToken(context).hashCode());
 
+			PendingIntent pendingIntentCancel = PendingIntent.getBroadcast(context, PENDING_INTENT_REQUEST_CODE, cancel, PendingIntent.FLAG_UPDATE_CURRENT);
 
-			PendingIntent pendingIntentCancel = PendingIntent.getBroadcast(context, 12345, cancel, PendingIntent.FLAG_UPDATE_CURRENT);
+			CharSequence title = TendartsSDK.instance().getStackedNotificationTitle();
+			String message = TendartsSDK.instance().getStackedNotificationContent(pushes.size());
 
+			NotificationCompat.Builder builder = getNotificationBuilder(context, title.toString(), message, pi);
 
-			NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-					.setColor(context.getResources().getColor(TendartsSDK.instance().getNotificationColorResource()))
-					.setContentTitle(TendartsSDK.instance().getStackedNotificationTitle())
-					.setContentText(TendartsSDK.instance().getStackedNotificationContent( pushes.size() ))
-					.setContentIntent(pi)
-					.setSmallIcon(TendartsSDK.instance().getSmallIconResource())
-					//.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_push_2))
-
-					//.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
-
-
-					.setVibrate(new long[]{0l})//1000, 1000, 1000, 1000, 1000})
+			builder.setVibrate(new long[]{0l})//1000, 1000, 1000, 1000, 1000})
 					//.setDefaults(Notification.DEFAULT_SOUND)
 					.addAction(TendartsSDK.instance().getViewStackedIconResource(), TendartsSDK.instance().getViewStackedString(), pi)
 					.addAction(TendartsSDK.instance().getCancelStackedIconResource(), TendartsSDK.instance().getCancelStackedString(), pendingIntentCancel);
 
 			//noinspection InlinedApi
-			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)//21
-			{
+			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 				builder.setVisibility(android.app.Notification.VISIBILITY_PUBLIC);
 			}
 			//noinspection InlinedApi
-			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)//16
-			{
+			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
 				builder.setPriority(android.app.Notification.PRIORITY_DEFAULT);
 			}
 
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				String defaultNotificationChannelId = Configuration.getDefaultNotificationChannelId(context);
+				NotificationChannel notificationChannel = new NotificationChannel(
+						DEFAULT_CHANNEL_ID,
+						defaultNotificationChannelId,
+						NotificationManager.IMPORTANCE_HIGH
+				);
+				if (mNotificationManager != null) {
+					mNotificationManager.createNotificationChannel(notificationChannel);
+				}
+			}
 
 			NotificationCompat.InboxStyle inbox = new NotificationCompat.InboxStyle(builder);
 			int i = 0;
-			for (Notification p : pushes)
-			{
+			for (Notification p : pushes) {
 
-				if( i==0)
-				{
+				if (i==0) {
 					i++;
 					continue;
 				}
@@ -937,16 +826,13 @@ public class GCMListenerService extends GcmListenerService
 
 				inbox.addLine(ss);//p.message);
 				i++;
-				if (i > 5)
-				{
+				if (i > 5) {
 					break;
 				}
 			}
-			if (i < 5 && push != null)
-			{
+			if (i < 5 && push != null) {
 				inbox.addLine(getLineTitle(push));
-			} else
-			{
+			} else {
 				inbox.setSummaryText("+" + (pushes.size() - i + 1));//todo + " " + context.getString(R.string.more));
 			}
 			android.app.Notification notification = inbox.build();
@@ -954,62 +840,69 @@ public class GCMListenerService extends GcmListenerService
 			notification.flags |= android.app.Notification.FLAG_AUTO_CANCEL;
 
 			mNotificationManager.notify(not_id, notification);
-			try
-			{
-				if( push != null )
-				{
-					TendartsClient.instance(context).logEvent("Push", "showed_list", "" + push.getFullText());
+			try {
+				if( push != null ) {
+				    LogHelper.logEventPush(context,"showed_list", "" + push.getFullText());
 					TendartsClient.instance(context).onNotificationShowedInList(push);
 				}
-
-
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
-
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
-			try
-			{
+			try {
 
-				TendartsClient.instance(context).logEvent("Push","show_list_exc",""+e.getMessage());
+			    LogHelper.logEventPush(context,"show_list_exc",""+e.getMessage());
 
-
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
 	}
 
+	private static NotificationCompat.Builder getNotificationBuilder(Context context,
+															  String notificationTitle,
+															  String notificationText,
+															  PendingIntent contentPendingIntent) {
+
+		int color = Color.parseColor("#000000");
+		try {
+			color = context.getResources().getColor(TendartsSDK.instance().getNotificationColorResource());
+		} catch ( Exception e) {
+			e.printStackTrace();
+		}
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, GCMListenerService.DEFAULT_CHANNEL_ID)
+				.setColor(color)
+				.setSmallIcon(TendartsSDK.instance().getSmallIconResource())
+				.setContentTitle(notificationTitle)
+				.setContentText(notificationText)
+				.setContentIntent(contentPendingIntent)
+				.setAutoCancel(true)
+				//.setCategory(Notification.CATEGORY_SOCIAL)
+				.setLargeIcon(TendartsSDK.instance().getLargeIcon(context))
+				.setSmallIcon(TendartsSDK.instance().getSmallIconResource());
+
+		return builder;
+	}
+
 	@NonNull
-	private static SpannableString getLineTitle(Notification p)
-	{
+	private static SpannableString getLineTitle(Notification p) {
 		String message = "• ";
 		int end = 2;
-		if( p.title != null  && p.title.length()< 15)
-		{
+		if (p.title != null  && p.title.length()< 15) {
 			message = message + p.title.trim()+" ";
 			end = message.length();
 		}
 		SpannableString ss =  new SpannableString(message+ p.message.trim());
-
-
-
 		ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),0,end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
 		return ss;
 	}
 
 
-	private  class BackgroundListener implements INotifications.IBackgroundCustomNotificationLoaderListener
-	{
+	private  class BackgroundListener implements INotifications.IBackgroundCustomNotificationLoaderListener {
 		Context _context;
 		NotificationManager _notificationManager;
 		NotificationCompat.Builder _builder;
@@ -1024,8 +917,7 @@ public class GCMListenerService extends GcmListenerService
 								  android.app.Notification notification,
 								  RemoteViews rv,
 								  RemoteViews rvBig,
-								  Notification push)
-		{
+								  Notification push) {
 			_context = context;
 			_notificationManager = notificationManager;
 			_builder = builder;
@@ -1039,18 +931,16 @@ public class GCMListenerService extends GcmListenerService
 		 * Loading failed and should fallback to standard notification
 		 */
 		@Override
-		public void revertToStandardNotification()
-		{
+		public void revertToStandardNotification() {
 
 			List<Notification> pushes = PersistentPush.getStored(getApplicationContext());
 
-			if( !TendartsSDK.instance().getStackNotifications() || TendartsSDK.instance().getAlwaysSowLastNotification())
-			{
+			if (!TendartsSDK.instance().getStackNotifications()
+					|| TendartsSDK.instance().getAlwaysSowLastNotification()) {
 
 				_notificationManager.notify(PushController.getNotificationId(_push), _notification);
 			}
-			if( pushes.size()>1 && TendartsSDK.instance().getStackNotifications())
-			{
+			if (pushes.size()>1 && TendartsSDK.instance().getStackNotifications()) {
 				notifyList(_context, _notificationManager, null, pushes);
 			}
 			PersistentPush.save(_context);
@@ -1063,8 +953,7 @@ public class GCMListenerService extends GcmListenerService
 		 * All asynchronous loading and manipulations done, remote views are ready to use
 		 */
 		@Override
-		public void customNotificationsReady(Bitmap bitmap)
-		{
+		public void customNotificationsReady(Bitmap bitmap) {
 
 			List<Notification> pushes = PersistentPush.getStored(_context);
 			/*if (pushes.size() > 1)
@@ -1073,16 +962,13 @@ public class GCMListenerService extends GcmListenerService
 			}// else*/
 			{
 
-				try
-				{
+				try {
 
 					//notification.bigContentView = rv;
-					if( _rv != null)
-					{
+					if (_rv != null) {
 						_builder.setContent(_rv);
 					}
-					if(_rvBig != null )
-					{
+					if (_rvBig != null ) {
 						_builder.setCustomBigContentView(_rvBig);
 					}
 					//notification.bigContentView = rv;
@@ -1094,15 +980,12 @@ public class GCMListenerService extends GcmListenerService
 
 					PersistentPush.save(_context);
 
-					if( pushes.size()>1 && TendartsSDK.instance().getStackNotifications())
-					{
+					if (pushes.size()>1 && TendartsSDK.instance().getStackNotifications()) {
 						notifyList(_context, _notificationManager, null, pushes);
 					}
 
-				} catch (Exception e)
-				{
+				} catch (Exception e) {
 					e.printStackTrace();
-
 				}
 			}
 			_backgroundListener = null;

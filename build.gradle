@@ -1,18 +1,9 @@
 apply plugin: 'com.android.library'
-//apply plugin: 'android-library'
-/*
-configurations {
-    sdkTestingDebug
-    sdkTestingRelease
-    sdkProductionDebug
-    sdkProductionRelease
-}
-*/
 
 ext {
     PUBLISH_GROUP_ID = 'com.10darts'
     PUBLISH_ARTIFACT_ID = 'sdk'
-    PUBLISH_VERSION = '1.23'
+    PUBLISH_VERSION = '1.26'
 
 
     bintrayRepo = '10darts'
@@ -25,27 +16,44 @@ ext {
     libraryDescription = '10 Darts Android SDK'
 
     siteUrl = 'https://10darts.com/'
-    gitUrl = 'https://github.com/onpublico/android-sdk'
+    gitUrl = 'https://github.com/10darts/android-TendartsSDK'
 
     libraryVersion = PUBLISH_VERSION
 
-    developerId = '10Darts'
-    developerName = 'Jorge Arimany'
-    developerEmail = 'jorge@onpublico.com'
+    developerId = '10darts'
+    developerName = '10darts'
+    developerEmail = 'marcos@10darts.com'
+    organization = '10darts'
 
     licenseName = 'MIT License'
-    licenseUrl = 'https://github.com/onpublico/android-sdk/blob/master/license.txt'
+    licenseUrl = 'https://github.com/10darts/android-TendartsSDK/blob/master/LICENSE'
     allLicenses = ["MIT"]
 }
 
+def propertiesFile = rootProject.file('sdk/credentials.properties')
+def propertiesData = new Properties()
+propertiesData.load(new FileInputStream(propertiesFile))
+
+ext.bintrayUser=propertiesData['bintray.user']
+ext.bintrayApiKey=propertiesData['bintray.apikey']
+ext.bintrayGpgPassword=propertiesData['bintray.gpg.password']
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+    }
+}
+
 android {
-    compileSdkVersion 24//21
-    buildToolsVersion "25.0.1"
+    compileSdkVersion 27
 
     defaultConfig {
         minSdkVersion 15
-        //targetSdkVersion 25
-        targetSdkVersion 23
+        targetSdkVersion 27
         versionCode 1
         versionName PUBLISH_VERSION
 
@@ -53,36 +61,37 @@ android {
 
     }
     buildTypes {
+
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'library.pro' //'proguard-rules.pro'
             android.libraryVariants.all
                     {
-                        variant -> variant.outputs.each
+                        variant -> variant.outputs.all()
                                 {
                                     output ->
-                                        def outputFile = output.outputFile;
-                                        if( !outputFile.name.contains("esting")
-                                                && outputFile.name.endsWith(".aar")
-                                                &&!outputFile.name.contains("ebug"))
+                                        if( !outputFileName.contains("esting")
+                                                && outputFileName.endsWith(".aar")
+                                                &&!outputFileName.contains("ebug"))
                                         {
-                                            output.outputFile = new File(outputFile.parent, "sdk.aar")
+                                            println "variant output name: " + outputFileName
+                                            outputFileName = "sdk.aar"
                                         }
 
-
-                        }
+                                }
                     }
         }
     }
 
-    publishNonDefault false
-    productFlavors {
-        sdkTesting {
+    flavorDimensions "default"
 
+    // These flavors also point to different Constants environments
+    productFlavors {
+
+        sdkTesting {
             //signingConfig signingConfigs.production
         }
         sdk {
-
             //signingConfig signingConfigs.production
         }
 
@@ -95,47 +104,41 @@ android {
         pickFirst 'META-INF/*'
     }
 
+    useLibrary 'org.apache.http.legacy'
+}
 
+ext {
+    playServicesVersion = '11.8.0'
+    androidSupportVersion = '27.0.2'
+}
 
-   useLibrary 'org.apache.http.legacy'
+configurations.all {
+    resolutionStrategy.force "com.android.support:support-v4:${androidSupportVersion}"
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+
+    // Android Support
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    //compile 'com.android.support:appcompat-v7:25.1.1'
-    //compile 'com.android.support:appcompat-v7:23.0.3'
 
+    // Play Services
+    implementation ("com.google.android.gms:play-services-gcm:${playServicesVersion}") { transitive = true }
+    implementation "com.google.android.gms:play-services-location:${playServicesVersion}"
 
-    //compile 'com.android.support:appcompat-v7:25.0.1'--------
+    implementation 'org.apache.httpcomponents:httpclient-android:4.3.5'
+    implementation ('org.apache.httpcomponents:httpmime:4.3.5') {
+        exclude module: 'httpclient'
+    }
 
-    compile ('com.google.android.gms:play-services-gcm:9.8.0'){ transitive = true }
-    compile 'com.google.android.gms:play-services-location:9.8.0'
-    //compile 'com.squareup.picasso:picasso:2.5.2'
-
-    testCompile 'junit:junit:4.12'
-    //compile group: 'org.apache.httpcomponents' , name: 'httpclient-android' , version: '4.3.5.1'
-    //compile group: 'org.apache.httpcomponents' , name: 'httpmime' , version: '4.3.5'
-    compile 'org.apache.httpcomponents:httpclient-android:4.3.5'
-    compile 'org.apache.httpcomponents:httpmime:4.3.5'
-    //compile 'org.apache.httpcomponents:httpcore:4.3.2'
-
-
-
-    //exclude module:'Onpublico','common','glass','mobile','wear'
-
-    //compile project(path: ':general')
 }
 
+// Scripts to make uploading to bintray easy (https://github.com/quangctkm9207/template-files/tree/master/android/gradle)
+apply from: 'https://raw.githubusercontent.com/quangctkm9207/template-files/master/android/gradle/install.gradle'
+apply from: 'bintray_config.gradle'
 
-
-apply from: 'release-android-library.gradle'
-
-//apply plugin: 'com.github.dcendents.android-maven'
-
-//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
-
-
+// Upload library to Bintray:
+// ./gradlew clean bintrayUpload
